@@ -4,12 +4,13 @@ import os
 import random
 
 MAX_OPTIONS = 2
-rod = 0
-str = 0
-luck = 100
-rod_bonus = rod * 0.1
-str_bonus = str * 0.05
-luck_bonus = luck * 0.7
+
+PLAYER_STATS = {
+    "rod": 1,
+    "str": 0,
+    "luck": 0,
+    "speed": 0,
+}
 
 BASE_CHANCES = {
     "Secret": 0.1,
@@ -20,28 +21,40 @@ BASE_CHANCES = {
     "Common": 60,
 }
 
-def calcular_raridades():
-    BONUS_TOTAL = rod_bonus + str_bonus + luck_bonus
-    CHANCES = BASE_CHANCES.copy()
-    CHANCES["Common"] = max(5, BASE_CHANCES["Common"] - BONUS_TOTAL)
-    BONUS_RECALCULADO = BASE_CHANCES["Common"] - CHANCES["Common"]
-    if BONUS_RECALCULADO > 0:
-        CHANCES["Secret"] += BONUS_RECALCULADO * 0.03
-        CHANCES["Legendary"] += BONUS_RECALCULADO * 0.07
-        CHANCES["Epic"] += BONUS_RECALCULADO * 0.10
-        CHANCES["Rare"] += BONUS_RECALCULADO * 0.30
-        CHANCES["Uncommon"] += BONUS_RECALCULADO * 0.50
-    return CHANCES
-
-
 PEIXES = {
     "Secret": ["Tubarao"],
     "Legendary": ["Peixe Morto-vivo"],
     "Epic": ["Peixe Borboleta"],
     "Rare": ["Salmao"],
-    "Uncommon": ["Peixe Palhaco","Teste","Bota"],
+    "Uncommon": ["Peixe Palhaco","Bota"],
     "Common": ["Carpa","Atum"]
 }
+
+def calcular_raridades():
+    rod_bonus = PLAYER_STATS["rod"] * 0.3
+    str_bonus = PLAYER_STATS["str"] * 0.05
+    luck_bonus = PLAYER_STATS["luck"] * 0.2
+    BONUS_TOTAL = rod_bonus + str_bonus + luck_bonus
+    print(BONUS_TOTAL)
+    CHANCES = BASE_CHANCES.copy()
+    CHANCES["Common"] = max(7, BASE_CHANCES["Common"] - BONUS_TOTAL)
+    BONUS_RECALCULADO = BASE_CHANCES["Common"] - CHANCES["Common"]
+    if PLAYER_STATS["rod"] > 2:
+        CHANCES["Uncommon"] = max(10, BASE_CHANCES["Uncommon"] - (BONUS_TOTAL - CHANCES["Common"]))
+        BONUS_RECALCULADO = (BASE_CHANCES["Common"] - CHANCES["Common"]) + (BASE_CHANCES["Uncommon"] - CHANCES["Uncommon"])
+    if BONUS_RECALCULADO > 0:
+        if PLAYER_STATS["rod"] < 2:
+            CHANCES["Secret"] += BONUS_RECALCULADO * 0.03
+            CHANCES["Legendary"] += BONUS_RECALCULADO * 0.07
+            CHANCES["Epic"] += BONUS_RECALCULADO * 0.15
+            CHANCES["Rare"] += BONUS_RECALCULADO * 0.30
+            CHANCES["Uncommon"] += BONUS_RECALCULADO * 0.45
+        else:
+            CHANCES["Secret"] += BONUS_RECALCULADO * 0.1
+            CHANCES["Legendary"] += BONUS_RECALCULADO * 0.19
+            CHANCES["Epic"] += BONUS_RECALCULADO * 0.25
+            CHANCES["Rare"] += BONUS_RECALCULADO * 0.46
+    return CHANCES
 
 def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -90,7 +103,7 @@ def pesca():
 startup()
 while(True):
     option = -1
-    while(option < 0 or option > MAX_OPTIONS or option != 999):
+    while(option < 0):
         limpar_tela()
         print("MENU")
         print("[1] PESCA")
@@ -106,7 +119,7 @@ while(True):
     elif (option == 1):
         pesca()
     elif (option == 999):
-        print("DEBUG RARIDADES")
+        print("\nDEBUG RARIDADES")
         CHANCES = calcular_raridades()
         print("Secret: {}\nLegendary: {}\nEpic: {}\nRare: {}\nUncommon: {}\nCommon: {}\n".format(CHANCES["Secret"], CHANCES["Legendary"], CHANCES["Epic"], CHANCES["Rare"], CHANCES["Uncommon"], CHANCES["Common"]))
         os.system("pause")
