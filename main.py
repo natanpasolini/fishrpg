@@ -3,6 +3,8 @@ import os
 import random
 import math
 
+version = "A01C"
+
 PLAYER_STATS = {
     "rod": 1,
     "str": 0.5,
@@ -29,7 +31,7 @@ PEIXES = {
     "Legendary": ["Pirarucu","Dourado (Rei do Rio)","Garoupa-verdadeira","Tubarão (Filhote)"],
     "Epic": ["Peixe Borboleta","Corvina","Robalo","Tainha"],
     "Rare": ["Pescadinha","Traíra","Parati"],
-    "Uncommon": ["Peixe Palhaco","Manjuba","Neon Cardinal","Peixe Agulhinha","Lambari"],
+    "Uncommon": ["Peixe Palhaco","Manjuba","Neon Cardinal","Peixe Agulhinha"],
     "Common": ["Alga","Larva","Camarão","Lambari"]
 }
 
@@ -51,7 +53,7 @@ def startup():
     limpar_tela()
     print("====================")
     print("\n  PY FISHING GAME")
-    print("  v. A01\n")
+    print(f"  v. {version}\n")
     print("====================")
     os.system("pause")
     limpar_tela()
@@ -143,9 +145,9 @@ startup()
 while(True):
     option = -1
     limpar_tela()
-    print("PY FISH GAME v.A01\n")
+    print(f"PY FISH GAME v.{version}\n")
     player_status_menu()
-    print("\n[1] PESCA       [2] INVENTARIO")
+    print("\n[1] PESCA       [2] CÓDEX")
     print("[3] LOJA        [4] HABILIDADES")
     print("[0] SAIR")
     try:
@@ -155,6 +157,24 @@ while(True):
             break
         elif (option == 1):
             pesca()
+        elif (option == 2):
+            print("CÓDEX DE PEIXES")
+            for i in reversed(PEIXES):
+                j = PEIXES[i]
+                print(f"{str(i).upper()}")
+                for i in range(len(j)):
+                    if j[i] in PLAYER_FISHES:
+                        print(f"[{j[i]} - {PLAYER_FISHES[j[i]]:.2f} cm]", end=" ", flush=True)
+                    else:
+                        print("??????", end=" ", flush=True)
+                print("")
+            os.system("pause")
+        elif (option == 3):
+            print("NÃO DISPONÍVEL NESTA VERSÃO")
+            os.system("pause")
+        elif (option == 4):
+            print("NÃO DISPONÍVEL NESTA VERSÃO")
+            os.system("pause")
         elif (option == 999):
             print("\nDEBUG RARIDADES")
             CHANCES = calcular_raridades()
