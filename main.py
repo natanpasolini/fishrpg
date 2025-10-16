@@ -3,14 +3,14 @@ import os
 import random
 import math
 
-version = "A01C"
+version = "A02A"
 
 PLAYER_STATS = {
     "rod": 1,
-    "str": 0.5,
+    "str": 1,
     "luck": 1,
-    "speed": 0.5,
-    "money": 5,
+    "speed": 1,
+    "money": 0,
     "level": 1,
     "xp": 0,
     "xplvlup": 2,
@@ -18,33 +18,49 @@ PLAYER_STATS = {
 }
 
 BASE_CHANCES = {
-    "Secret": 0.01,
-    "Legendary": 0.1,
-    "Epic": 2,
-    "Rare": 7.9,
-    "Uncommon": 20,
-    "Common": 69.99
+    "Secreto": 0.01,
+    "Lendário": 0.1,
+    "Épico": 2,
+    "Raro": 7.9,
+    "Incomum": 20,
+    "Comum": 69.99
+}
+
+BASE_XP = {
+    "Secreto": 100,
+    "Lendário": 30,
+    "Épico": 24,
+    "Raro": 9,
+    "Incomum": 3,
+    "Comum": 1
 }
 
 PEIXES = {
-    "Secret": ["Megalodonte (Filhote)","Enguia Elétrica Titânica"],
-    "Legendary": ["Pirarucu","Dourado (Rei do Rio)","Garoupa-verdadeira","Tubarão (Filhote)"],
-    "Epic": ["Peixe Borboleta","Corvina","Robalo","Tainha"],
-    "Rare": ["Pescadinha","Traíra","Parati"],
-    "Uncommon": ["Peixe Palhaco","Manjuba","Neon Cardinal","Peixe Agulhinha"],
-    "Common": ["Alga","Larva","Camarão","Lambari"]
+    "Secreto": ["Megalodonte (Filhote)","Enguia Elétrica Titânica"],
+    "Lendário": ["Pirarucu","Dourado (Rei do Rio)","Garoupa-verdadeira","Tubarão (Filhote)"],
+    "Épico": ["Peixe Borboleta","Corvina","Robalo","Tainha"],
+    "Raro": ["Pescadinha","Traíra","Parati"],
+    "Incomum": ["Peixe Palhaco","Manjuba","Neon Cardinal","Peixe Agulhinha"],
+    "Comum": ["Alga","Larva","Camarão","Lambari"]
 }
 
 FISHES_SIZES = {
-    "Secret": [500,1000],
-    "Legendary": [100,130],
-    "Epic": [40,60],
-    "Rare": [12,40],
-    "Uncommon": [5,9],
-    "Common": [0,4]
+    "Secreto": [500,1000],
+    "Lendário": [100,130],
+    "Épico": [40,60],
+    "Raro": [12,40],
+    "Incomum": [5,9],
+    "Comum": [0,4]
 }
 
-PLAYER_FISHES = {}
+PLAYER_FISHES = {
+    "Secreto": {},
+    "Lendário": {},
+    "Épico": {},
+    "Raro": {},
+    "Incomum": {},
+    "Comum": {}
+}
 
 def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -56,10 +72,32 @@ def startup():
     print(f"  v. {version}\n")
     print("====================")
     os.system("pause")
-    limpar_tela()
+
+def refresh_player_stats():
+    PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 3.75)
+    level_inicial = PLAYER_STATS["level"]
+    while (True):
+        if PLAYER_STATS["xp"] >= PLAYER_STATS["xplvlup"]:
+            PLAYER_STATS["level"] += 1
+            PLAYER_STATS["xp"] -= PLAYER_STATS["xplvlup"]
+            PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 3.75)
+        else:
+            level_final = PLAYER_STATS["level"]
+            break
+    if level_inicial != level_final:
+        skill_points = 0
+        for i in range(level_final - level_inicial):
+            skill_points += 3
+        limpar_tela()
+        PLAYER_STATS["sp"] += skill_points
+        print("LEVEL UP!")
+        print(f"{level_inicial} --> {level_final}")
+        print(f"+{skill_points} SKILL POINTS")
+        time.sleep(0.4)
+        os.system("pause")
+    
 
 def player_status_menu():
-    PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 3.75)
     print(f"NÍVEL: {PLAYER_STATS['level']}   DINHEIRO: {PLAYER_STATS['money']}")
     barraXP = ""
     tamanho_total_barra = 16
@@ -80,75 +118,124 @@ def calcular_raridades():
     luck_bonus = PLAYER_STATS["luck"] * 0.2
     BONUS_TOTAL = rod_bonus + str_bonus + luck_bonus
     CHANCES = BASE_CHANCES.copy()
-    CHANCES["Common"] = max(7, BASE_CHANCES["Common"] - BONUS_TOTAL)
-    BONUS_RECALCULADO = BASE_CHANCES["Common"] - CHANCES["Common"]
+    CHANCES["Comum"] = max(7, BASE_CHANCES["Comum"] - BONUS_TOTAL)
+    BONUS_RECALCULADO = BASE_CHANCES["Comum"] - CHANCES["Comum"]
     if PLAYER_STATS["rod"] > 2:
-        CHANCES["Uncommon"] = max(10, BASE_CHANCES["Uncommon"] - (BONUS_TOTAL - CHANCES["Common"]))
-        BONUS_RECALCULADO = (BASE_CHANCES["Common"] - CHANCES["Common"]) + (BASE_CHANCES["Uncommon"] - CHANCES["Uncommon"])
+        CHANCES["Incomum"] = max(10, BASE_CHANCES["Incomum"] - (BONUS_TOTAL - CHANCES["Comum"]))
+        BONUS_RECALCULADO = (BASE_CHANCES["Comum"] - CHANCES["Comum"]) + (BASE_CHANCES["Incomum"] - CHANCES["Incomum"])
     if BONUS_RECALCULADO > 0:
         if PLAYER_STATS["rod"] < 2:
-            CHANCES["Secret"] += BONUS_RECALCULADO * 0.03
-            CHANCES["Legendary"] += BONUS_RECALCULADO * 0.07
-            CHANCES["Epic"] += BONUS_RECALCULADO * 0.15
-            CHANCES["Rare"] += BONUS_RECALCULADO * 0.30
-            CHANCES["Uncommon"] += BONUS_RECALCULADO * 0.45
+            CHANCES["Secreto"] += BONUS_RECALCULADO * 0.03
+            CHANCES["Lendário"] += BONUS_RECALCULADO * 0.07
+            CHANCES["Épico"] += BONUS_RECALCULADO * 0.15
+            CHANCES["Raro"] += BONUS_RECALCULADO * 0.30
+            CHANCES["Incomum"] += BONUS_RECALCULADO * 0.45
         else:
-            CHANCES["Secret"] += BONUS_RECALCULADO * 0.1
-            CHANCES["Legendary"] += BONUS_RECALCULADO * 0.19
-            CHANCES["Epic"] += BONUS_RECALCULADO * 0.25
-            CHANCES["Rare"] += BONUS_RECALCULADO * 0.46
+            CHANCES["Secreto"] += BONUS_RECALCULADO * 0.1
+            CHANCES["Lendário"] += BONUS_RECALCULADO * 0.19
+            CHANCES["Épico"] += BONUS_RECALCULADO * 0.25
+            CHANCES["Raro"] += BONUS_RECALCULADO * 0.46
     return CHANCES
 
 def gerar_peixe():
     CHANCES = calcular_raridades()
     prarity = ""
     x = random.uniform(0,100)
-    if x <= CHANCES["Secret"]:
-        prarity = "Secret"
-    elif x <= CHANCES["Secret"] + CHANCES["Legendary"]:
-        prarity = "Legendary"
-    elif x <= CHANCES["Secret"] + CHANCES["Legendary"] + CHANCES["Epic"]:
-        prarity = "Epic"
-    elif x <= CHANCES["Secret"] + CHANCES["Legendary"] + CHANCES["Epic"] + CHANCES["Rare"]:
-        prarity = "Rare"
-    elif x <= CHANCES["Secret"] + CHANCES["Legendary"] + CHANCES["Epic"] + CHANCES["Rare"] + CHANCES["Uncommon"]:
-        prarity = "Uncommon"
+    if x <= CHANCES["Secreto"]:
+        prarity = "Secreto"
+    elif x <= CHANCES["Secreto"] + CHANCES["Lendário"]:
+        prarity = "Lendário"
+    elif x <= CHANCES["Secreto"] + CHANCES["Lendário"] + CHANCES["Épico"]:
+        prarity = "Épico"
+    elif x <= CHANCES["Secreto"] + CHANCES["Lendário"] + CHANCES["Épico"] + CHANCES["Raro"]:
+        prarity = "Raro"
+    elif x <= CHANCES["Secreto"] + CHANCES["Lendário"] + CHANCES["Épico"] + CHANCES["Raro"] + CHANCES["Incomum"]:
+        prarity = "Incomum"
     else:
-        prarity = "Common"
+        prarity = "Comum"
     psize = random.uniform(FISHES_SIZES[prarity][0],FISHES_SIZES[prarity][1])
-    return prarity, psize
+    pxp = random.randint(BASE_XP[prarity],math.ceil(BASE_XP[prarity]*1.3)) * PLAYER_STATS["rod"]
+    return prarity, psize, pxp
 
 def pesca():
     limpar_tela()
-    prarity, psize = gerar_peixe()
-    tempo = int((random.uniform(1,5) / (PLAYER_STATS["str"] + PLAYER_STATS["speed"])))
+    prarity, psize, pxp = gerar_peixe()
+    tempo = int((random.uniform(1,5) / (((PLAYER_STATS["str"] * 0.2) + (PLAYER_STATS["speed"] * 0.2))) * 2))
     print("PESCA\n")
     print("PESCANDO: ", end="")
-    for i in range(tempo):
+    for i in range(5):
         print("■", end="", flush=True)
         time.sleep(tempo / 10)
-        if i == tempo - 1:
-            print("\n")
+    limpar_tela()
+    print("PESCA\n")
     peixe = random.randint(0,(len(PEIXES[prarity]) - 1))
-    peixeNome = PEIXES[prarity][peixe]
-    if peixeNome not in PLAYER_FISHES:
-        print("NOVA DESCOBERTA!")
-        PLAYER_FISHES[peixeNome] = psize
+    pnome = PEIXES[prarity][peixe]
+    if pnome not in PLAYER_FISHES[prarity]:
+        PLAYER_FISHES[prarity][pnome] = psize
+        x = 1
+        for i in reversed(PEIXES):
+            if i == prarity:
+                xp_extra = 2 * x
+                pxp += xp_extra
+                print(f"NOVA DESCOBERTA! (+{xp_extra} XP)")
+                break
+            else:
+                x += 1
     else:
-        if psize > PLAYER_FISHES[peixeNome]:
-            PLAYER_FISHES[peixeNome] = psize
+        if psize > PLAYER_FISHES[prarity][pnome]:
+            PLAYER_FISHES[prarity][pnome] = psize
             print("NOVO RECORDE!")
-    print(f"[{prarity}]\n{peixeNome}\n{psize:.2f} cm")
+    print(f"[{prarity}]\n{pnome}\n{psize:.2f} cm")
+    print(f"+{pxp} XP\n")
+    PLAYER_STATS["xp"] += pxp
     os.system("pause")
+
+def skill_menu():
+    while(True):
+        option = -1
+        MELHORIAS = ["FORÇA", "VELOCIDADE", "SORTE"]
+        MELHORIAS_STATS = ["str", "speed", "luck"]
+        limpar_tela()
+        print("MELHORIAS")
+        print(f"PONTOS DISPONIVEIS: {PLAYER_STATS['sp']}\n")
+        print(f"[1] FORÇA: {PLAYER_STATS['str']}")
+        print(f"[2] VELOCIDADE: {PLAYER_STATS['speed']}")
+        print(f"[3] SORTE: {PLAYER_STATS['luck']}")
+        print("[0] PARA VOLTAR")
+        try:
+            option = int(input("\nESCOLHA: "))
+            if (option == 0):
+                break
+            elif (PLAYER_STATS["sp"] > 0):
+                if (option <= 3):
+                    try:
+                        pontos = int(input("\nPONTOS A ATRIBUIR: "))
+                        if pontos <= PLAYER_STATS["sp"]:
+                            limpar_tela()
+                            print(f"ATRIBUIR {pontos} EM {MELHORIAS[option - 1]}?")
+                            try:
+                                confirmacao = str(input("\n[S/N]: "))
+                                if confirmacao.upper() == "S":
+                                    PLAYER_STATS[MELHORIAS_STATS[option - 1]] += pontos
+                                    PLAYER_STATS["sp"] -= pontos
+                                elif confirmacao.upper() == "N":
+                                    break
+                            except ValueError:
+                                confirmacao = ""
+                    except ValueError:
+                        pontos = -1
+        except ValueError:
+            option = -1
 
 startup()
 while(True):
     option = -1
+    refresh_player_stats()
     limpar_tela()
     print(f"PY FISH GAME v.{version}\n")
     player_status_menu()
     print("\n[1] PESCA       [2] CÓDEX")
-    print("[3] LOJA        [4] HABILIDADES")
+    print("[3] LOJA        [4] MELHORIAS")
     print("[0] SAIR")
     try:
         option = int(input("\nESCOLHA: "))
@@ -161,24 +248,22 @@ while(True):
             print("CÓDEX DE PEIXES")
             for i in reversed(PEIXES):
                 j = PEIXES[i]
-                print(f"{str(i).upper()}")
-                for i in range(len(j)):
-                    if j[i] in PLAYER_FISHES:
-                        print(f"[{j[i]} - {PLAYER_FISHES[j[i]]:.2f} cm]", end=" ", flush=True)
-                    else:
-                        print("??????", end=" ", flush=True)
+                print(f"{str(i).upper()} [{len(PLAYER_FISHES[i])}/{len(PEIXES[i])}]")
+                for k in range(len(j)):
+                    if j[k] in PLAYER_FISHES[i]:
+                        print(f"[{j[k]} - {PLAYER_FISHES[i][j[k]]:.2f} cm]", end=" ", flush=True)
                 print("")
             os.system("pause")
         elif (option == 3):
             print("NÃO DISPONÍVEL NESTA VERSÃO")
             os.system("pause")
         elif (option == 4):
-            print("NÃO DISPONÍVEL NESTA VERSÃO")
+            skill_menu()
             os.system("pause")
         elif (option == 999):
             print("\nDEBUG RARIDADES")
             CHANCES = calcular_raridades()
-            print("Secret: {}\nLegendary: {}\nEpic: {}\nRare: {}\nUncommon: {}\nCommon: {}\n".format(CHANCES["Secret"], CHANCES["Legendary"], CHANCES["Epic"], CHANCES["Rare"], CHANCES["Uncommon"], CHANCES["Common"]))
+            print("Secreto: {}\nLendário: {}\nÉpico: {}\nRaro: {}\nIncomum: {}\nComum: {}\n".format(CHANCES["Secreto"], CHANCES["Lendário"], CHANCES["Épico"], CHANCES["Raro"], CHANCES["Incomum"], CHANCES["Comum"]))
             os.system("pause")
     except ValueError:
         option = -1
