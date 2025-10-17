@@ -3,7 +3,7 @@ import os
 import random
 import math
 
-version = "A03a"
+version = "A03b"
 
 PLAYER_STATS = {
     "rod": 1,
@@ -113,7 +113,7 @@ def refresh_player_stats():
     
 
 def player_status_menu():
-    print(f"NÍVEL: {PLAYER_STATS['level']}   FISH COINS: {PLAYER_STATS['money']}")
+    print(f"NÍVEL: {PLAYER_STATS['level']}   FISH COINS: {PLAYER_STATS['money']:.2f}")
     barraXP = ""
     tamanho_total_barra = 16
     if PLAYER_STATS["xp"] > 0:
@@ -174,12 +174,19 @@ def gerar_peixe():
     else:
         prarity = "Comum"
     psize = random.uniform(FISHES_SIZES[prarity][0],FISHES_SIZES[prarity][1])
+    indice = 0
+    for i in reversed(PEIXES):
+        if i == prarity:
+            break
+        else:
+            indice += 1
+    pprice = random.uniform(0,2) * (psize * 0.3) + 3 * (indice * 3)
     pxp = random.randint(BASE_XP[prarity],math.ceil(BASE_XP[prarity]*1.3)) * PLAYER_STATS["rod"]
-    return prarity, psize, pxp
+    return prarity, psize, pxp, pprice
 
 def pesca():
     limpar_tela()
-    prarity, psize, pxp = gerar_peixe()
+    prarity, psize, pxp, pprice = gerar_peixe()
     tempo = int((random.uniform(1,5) / (((PLAYER_STATS["str"] * 0.2) + (PLAYER_STATS["speed"] * 0.2))) * 2))
     print("PESCA\n")
     print("PESCANDO: ", end="")
@@ -206,8 +213,9 @@ def pesca():
             PLAYER_FISHES[prarity][pnome] = psize
             print("NOVO RECORDE!")
     print(f"[{prarity}]\n{pnome}\n{psize:.2f} cm")
-    print(f"+{pxp} XP\n")
+    print(f"+{pxp} XP  +{pprice:.2f} FISH COINS\n")
     PLAYER_STATS["xp"] += pxp
+    PLAYER_STATS["money"] += pprice
     os.system("pause")
 
 def skill_menu():
@@ -287,7 +295,7 @@ def shop_menu():
                         else:
                             preco_ponto = math.ceil(100 * (1 * 1.3))
                         print("PONTO DE MELHORIA")
-                        print(f"FISH COINS: {PLAYER_STATS['money']}\n")
+                        print(f"FISH COINS: {PLAYER_STATS['money']:.2f}\n")
                         print(f"[PREÇO ATUAL: {preco_ponto}]\n")
                         print("O PREÇO AUMENTA EXPONENCIALMENTE A CADA PONTO COMPRADO!")
                         print("DIGITE A QUANTIDADE QUE DESEJA COMPRAR (0 RETORNA)\n")
@@ -303,7 +311,7 @@ def shop_menu():
                                     x += 1
                                 preco_ponto = math.ceil(100 * (x * 1.3))
                                 print("PONTO DE MELHORIA\n")
-                                print(f"FISH COINS: {PLAYER_STATS['money']}\n")
+                                print(f"FISH COINS: {PLAYER_STATS['money']:.2f}\n")
                                 print(f"COMPRAR {y} PONTOS POR [{preco_ponto} FC]?")
                                 try:
                                     option = str(input("[S/N]: "))
