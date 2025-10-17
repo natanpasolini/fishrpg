@@ -3,7 +3,7 @@ import os
 import random
 import math
 
-version = "A02B"
+version = "A03a"
 
 PLAYER_STATS = {
     "rod": 1,
@@ -12,9 +12,11 @@ PLAYER_STATS = {
     "speed": 1,
     "money": 0,
     "level": 1,
+    "max_level": 30,
     "xp": 0,
     "xplvlup": 2,
-    "sp": 0
+    "sp": 0,
+    "sp_bought": 0
 }
 
 BASE_CHANCES = {
@@ -62,6 +64,19 @@ PLAYER_FISHES = {
     "Comum": {}
 }
 
+SHOP_ITEMS = {
+    "VARAS": {
+        "Vara1": 10,
+        "Vara2": 2
+    },
+    "POÇÕES": {
+        "Poção 1": 2,
+        "Poção 2": 4,
+        "Poção 3": 0
+    },
+    "PONTOS": 100
+}
+
 def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -77,7 +92,7 @@ def refresh_player_stats():
     PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 3.75)
     level_inicial = PLAYER_STATS["level"]
     while (True):
-        if PLAYER_STATS["xp"] >= PLAYER_STATS["xplvlup"]:
+        if PLAYER_STATS["xp"] >= PLAYER_STATS["xplvlup"] and PLAYER_STATS["level"] < PLAYER_STATS["max_level"]:
             PLAYER_STATS["level"] += 1
             PLAYER_STATS["xp"] -= PLAYER_STATS["xplvlup"]
             PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 3.75)
@@ -98,11 +113,13 @@ def refresh_player_stats():
     
 
 def player_status_menu():
-    print(f"NÍVEL: {PLAYER_STATS['level']}   DINHEIRO: {PLAYER_STATS['money']}")
+    print(f"NÍVEL: {PLAYER_STATS['level']}   FISH COINS: {PLAYER_STATS['money']}")
     barraXP = ""
     tamanho_total_barra = 16
     if PLAYER_STATS["xp"] > 0:
         dif = (PLAYER_STATS["xp"] * 100) / PLAYER_STATS["xplvlup"]
+        if dif > 100:
+            dif = 100
         blocos_preenchidos = int(tamanho_total_barra * (dif / 100))
         if blocos_preenchidos <= 0:
             blocos_preenchidos = 1
@@ -110,7 +127,10 @@ def player_status_menu():
         barraXP = ("■" * blocos_preenchidos) + ("□" * blocos_vazios)
     else:
         barraXP = "□" * tamanho_total_barra
-    print(f"XP: {barraXP} {PLAYER_STATS['xp']}/{PLAYER_STATS['xplvlup']}")
+    if PLAYER_STATS["level"] < PLAYER_STATS["max_level"]:
+        print(f"XP: {barraXP} {PLAYER_STATS['xp']}/{PLAYER_STATS['xplvlup']}")
+    else:
+        print(f"XP: LVL MAX")
 
 def calcular_raridades():
     rod_bonus = PLAYER_STATS["rod"] * 0.3
@@ -232,6 +252,78 @@ def skill_menu():
         except ValueError:
             option = -1
 
+def shop_menu():
+    while True:
+        limpar_tela()
+        print("LOJA")
+        print(f"FISH COINS: {PLAYER_STATS['money']}\n")
+        option = -1
+        j = 0
+        largura = 12
+        o_pontos = -1
+        for i in SHOP_ITEMS:
+            j += 1
+            if j % 2 != 0:
+                espaco = largura - len(i)
+                print(f"[{j}] {i}", end=f"", flush=True)
+                print(" " * espaco, end="", flush=True)
+            else:
+                print(f"[{j}] {i}")
+        print("\n[0] VOLTAR\n")
+        try:
+            option = int(input("ESCOLHA: "))
+            if option == 0:
+                break
+            elif option <= len(SHOP_ITEMS):
+                shop_option = list(SHOP_ITEMS)[option - 1]
+                if shop_option != "Pontos":
+                    for i in SHOP_ITEMS[shop_option]:
+                        print(i, SHOP_ITEMS[shop_option][i])
+                else:
+                    while True:
+                        limpar_tela()
+                        if PLAYER_STATS["sp_bought"] >= 1:
+                            preco_ponto = math.ceil(100 * (PLAYER_STATS["sp_bought"] * 1.3))
+                        else:
+                            preco_ponto = math.ceil(100 * (1 * 1.3))
+                        print("PONTO DE MELHORIA")
+                        print(f"FISH COINS: {PLAYER_STATS['money']}\n")
+                        print(f"[PREÇO ATUAL: {preco_ponto}]\n")
+                        print("O PREÇO AUMENTA EXPONENCIALMENTE A CADA PONTO COMPRADO!")
+                        print("DIGITE A QUANTIDADE QUE DESEJA COMPRAR (0 RETORNA)\n")
+                        try:
+                            option = int(input("QUANTIDADE: "))
+                            if option == 0:
+                                break
+                            elif option > 0:
+                                limpar_tela()
+                                x = PLAYER_STATS["sp_bought"]
+                                y = option
+                                for i in range(y):
+                                    x += 1
+                                preco_ponto = math.ceil(100 * (x * 1.3))
+                                print("PONTO DE MELHORIA\n")
+                                print(f"FISH COINS: {PLAYER_STATS['money']}\n")
+                                print(f"COMPRAR {y} PONTOS POR [{preco_ponto} FC]?")
+                                try:
+                                    option = str(input("[S/N]: "))
+                                    option = option.upper()
+                                    if option == "S":
+                                        if PLAYER_STATS["money"] >= preco_ponto:
+                                            PLAYER_STATS["money"] -= preco_ponto
+                                            PLAYER_STATS["sp"] += y
+                                        else:
+                                            print("VOCÊ NÃO TEM DINHEIRO SUFICIENTE")
+                                            time.sleep(0.4)
+                                    elif option == "N":
+                                        continue
+                                except ValueError:
+                                    option = -1
+                        except ValueError:
+                            option = -1
+        except ValueError:
+            option = -1
+
 startup()
 while(True):
     option = -1
@@ -260,8 +352,7 @@ while(True):
                 print("")
             os.system("pause")
         elif (option == 3):
-            print("NÃO DISPONÍVEL NESTA VERSÃO")
-            os.system("pause")
+            shop_menu()
         elif (option == 4):
             skill_menu()
         elif (option == 999):
