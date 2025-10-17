@@ -3,7 +3,7 @@ import os
 import random
 import math
 
-version = "A02A"
+version = "A02B"
 
 PLAYER_STATS = {
     "rod": 1,
@@ -87,7 +87,7 @@ def refresh_player_stats():
     if level_inicial != level_final:
         skill_points = 0
         for i in range(level_final - level_inicial):
-            skill_points += 3
+            skill_points += 1
         limpar_tela()
         PLAYER_STATS["sp"] += skill_points
         print("LEVEL UP!")
@@ -115,7 +115,7 @@ def player_status_menu():
 def calcular_raridades():
     rod_bonus = PLAYER_STATS["rod"] * 0.3
     str_bonus = PLAYER_STATS["str"] * 0.05
-    luck_bonus = PLAYER_STATS["luck"] * 0.2
+    luck_bonus = PLAYER_STATS["luck"] * 0.75
     BONUS_TOTAL = rod_bonus + str_bonus + luck_bonus
     CHANCES = BASE_CHANCES.copy()
     CHANCES["Comum"] = max(7, BASE_CHANCES["Comum"] - BONUS_TOTAL)
@@ -198,9 +198,9 @@ def skill_menu():
         limpar_tela()
         print("MELHORIAS")
         print(f"PONTOS DISPONIVEIS: {PLAYER_STATS['sp']}\n")
-        print(f"[1] FORÇA: {PLAYER_STATS['str']}")
-        print(f"[2] VELOCIDADE: {PLAYER_STATS['speed']}")
-        print(f"[3] SORTE: {PLAYER_STATS['luck']}")
+        print(f"[1] FORÇA: {PLAYER_STATS['str']}\nDiminui a dificuldade de puxar um peixe de alta raridade")
+        print(f"[2] VELOCIDADE: {PLAYER_STATS['speed']}\nDiminui o tempo de pesca")
+        print(f"[3] SORTE: {PLAYER_STATS['luck']}\nAumenta a presença de peixes de alta raridade")
         print("[0] PARA VOLTAR")
         try:
             option = int(input("\nESCOLHA: "))
@@ -210,7 +210,12 @@ def skill_menu():
                 if (option <= 3):
                     try:
                         pontos = int(input("\nPONTOS A ATRIBUIR: "))
-                        if pontos <= PLAYER_STATS["sp"]:
+                        if pontos > PLAYER_STATS["sp"]:
+                            print(f"VOCÊ NÃO TEM {pontos} PONTOS DISPONIVEIS.")
+                            os.system("pause")
+                        if pontos == 0:
+                            continue
+                        elif pontos <= PLAYER_STATS["sp"]:
                             limpar_tela()
                             print(f"ATRIBUIR {pontos} EM {MELHORIAS[option - 1]}?")
                             try:
@@ -259,7 +264,6 @@ while(True):
             os.system("pause")
         elif (option == 4):
             skill_menu()
-            os.system("pause")
         elif (option == 999):
             print("\nDEBUG RARIDADES")
             CHANCES = calcular_raridades()
