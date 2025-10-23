@@ -31,12 +31,12 @@ RODS_STATS = {
 }
 
 BASE_CHANCES = {
-    "Secreto": 0.01,
-    "Lendário": 0.1,
-    "Épico": 2,
-    "Raro": 7.9,
+    "Secreto": 0.2,
+    "Lendário": 0.7,
+    "Épico": 3,
+    "Raro": 8,
     "Incomum": 20,
-    "Comum": 69.99
+    "Comum": 68.1
 }
 
 BASE_XP = {
