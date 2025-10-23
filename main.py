@@ -3,13 +3,14 @@ import os
 import random
 import math
 
-version = "A03b"
+version = "A04"
 
 PLAYER_STATS = {
     "rod": 1,
-    "str": 1,
-    "luck": 1,
-    "speed": 1,
+    "str": 0,
+    "max_str": 5,
+    "luck": 0,
+    "max_luck": 10,
     "money": 0,
     "level": 1,
     "max_level": 30,
@@ -77,6 +78,9 @@ SHOP_ITEMS = {
     "PONTOS": 100
 }
 
+def pausar_tela():
+    input("Pressione qualquer tecla para continuar...")
+
 def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -86,16 +90,16 @@ def startup():
     print("\n  PY FISHING GAME")
     print(f"  v. {version}\n")
     print("====================")
-    os.system("pause")
+    pausar_tela()
 
 def refresh_player_stats():
-    PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 3.75)
+    PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 6.85)
     level_inicial = PLAYER_STATS["level"]
     while (True):
         if PLAYER_STATS["xp"] >= PLAYER_STATS["xplvlup"] and PLAYER_STATS["level"] < PLAYER_STATS["max_level"]:
             PLAYER_STATS["level"] += 1
             PLAYER_STATS["xp"] -= PLAYER_STATS["xplvlup"]
-            PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 3.75)
+            PLAYER_STATS["xplvlup"] = math.ceil((PLAYER_STATS["level"] + 1) * 6.85)
         else:
             level_final = PLAYER_STATS["level"]
             break
@@ -109,8 +113,7 @@ def refresh_player_stats():
         print(f"{level_inicial} --> {level_final}")
         print(f"+{skill_points} SKILL POINTS")
         time.sleep(0.4)
-        os.system("pause")
-    
+        pausar_tela()
 
 def player_status_menu():
     print(f"NÍVEL: {PLAYER_STATS['level']}   FISH COINS: {PLAYER_STATS['money']:.2f}")
@@ -124,19 +127,18 @@ def player_status_menu():
         if blocos_preenchidos <= 0:
             blocos_preenchidos = 1
         blocos_vazios = tamanho_total_barra - blocos_preenchidos
-        barraXP = ("■" * blocos_preenchidos) + ("□" * blocos_vazios)
+        barraXP = ("▮" * blocos_preenchidos) + ("▯" * blocos_vazios)
     else:
-        barraXP = "□" * tamanho_total_barra
+        barraXP = "▯" * tamanho_total_barra
     if PLAYER_STATS["level"] < PLAYER_STATS["max_level"]:
-        print(f"XP: {barraXP} {PLAYER_STATS['xp']}/{PLAYER_STATS['xplvlup']}")
+        print(f"XP: {barraXP}  [{PLAYER_STATS['xp']}/{PLAYER_STATS['xplvlup']}]")
     else:
         print(f"XP: LVL MAX")
 
 def calcular_raridades():
-    rod_bonus = PLAYER_STATS["rod"] * 0.3
-    str_bonus = PLAYER_STATS["str"] * 0.05
-    luck_bonus = PLAYER_STATS["luck"] * 0.75
-    BONUS_TOTAL = rod_bonus + str_bonus + luck_bonus
+    rod_bonus = PLAYER_STATS["rod"] * 1.7
+    luck_bonus = PLAYER_STATS["luck"] * 3
+    BONUS_TOTAL = rod_bonus + luck_bonus
     CHANCES = BASE_CHANCES.copy()
     CHANCES["Comum"] = max(7, BASE_CHANCES["Comum"] - BONUS_TOTAL)
     BONUS_RECALCULADO = BASE_CHANCES["Comum"] - CHANCES["Comum"]
@@ -148,8 +150,8 @@ def calcular_raridades():
             CHANCES["Secreto"] += BONUS_RECALCULADO * 0.03
             CHANCES["Lendário"] += BONUS_RECALCULADO * 0.07
             CHANCES["Épico"] += BONUS_RECALCULADO * 0.15
-            CHANCES["Raro"] += BONUS_RECALCULADO * 0.30
-            CHANCES["Incomum"] += BONUS_RECALCULADO * 0.45
+            CHANCES["Raro"] += BONUS_RECALCULADO * 0.35
+            CHANCES["Incomum"] += BONUS_RECALCULADO * 0.40
         else:
             CHANCES["Secreto"] += BONUS_RECALCULADO * 0.1
             CHANCES["Lendário"] += BONUS_RECALCULADO * 0.19
@@ -187,23 +189,30 @@ def gerar_peixe():
 def pesca():
     limpar_tela()
     prarity, psize, pxp, pprice = gerar_peixe()
-    tempo = int((random.uniform(1,5) / (((PLAYER_STATS["str"] * 0.2) + (PLAYER_STATS["speed"] * 0.2))) * 2))
+    if PLAYER_STATS["str"] > 0:
+        if PLAYER_STATS["str"] == 1:
+            tempo_r = 0.85
+        else:
+            tempo_r = (PLAYER_STATS["str"] * 0.5)
+    else:
+        tempo_r = 0.7
+    tempo = (10 / tempo_r)
     print("PESCA\n")
     print("PESCANDO: ", end="")
-    for i in range(5):
-        print("■", end="", flush=True)
+    for i in range(10):
+        print("▮", end="", flush=True)
         time.sleep(tempo / 10)
     limpar_tela()
     print("PESCA\n")
     peixe = random.randint(0,(len(PEIXES[prarity]) - 1))
     pnome = PEIXES[prarity][peixe]
+    xp_extra = 0
     if pnome not in PLAYER_FISHES[prarity]:
         PLAYER_FISHES[prarity][pnome] = psize
         x = 1
         for i in reversed(PEIXES):
             if i == prarity:
                 xp_extra = 2 * x
-                pxp += xp_extra
                 print(f"NOVA DESCOBERTA! (+{xp_extra} XP)")
                 break
             else:
@@ -214,49 +223,83 @@ def pesca():
             print("NOVO RECORDE!")
     print(f"[{prarity}]\n{pnome}\n{psize:.2f} cm")
     print(f"+{pxp} XP  +{pprice:.2f} FISH COINS\n")
-    PLAYER_STATS["xp"] += pxp
+    PLAYER_STATS["xp"] += pxp + xp_extra
     PLAYER_STATS["money"] += pprice
-    os.system("pause")
+    pausar_tela()
+
+def skill_menu_barras():
+    if PLAYER_STATS["luck"] > 0:
+            dif = (PLAYER_STATS["luck"] * 100) / PLAYER_STATS["max_luck"]
+            if dif > 100:
+                dif = 100
+            blocos_preenchidos = int(PLAYER_STATS["max_luck"] * (dif / 100))
+            if blocos_preenchidos <= 0:
+                blocos_preenchidos = 1
+            blocos_vazios = PLAYER_STATS["max_luck"] - blocos_preenchidos
+            barraLuck = ("▮" * blocos_preenchidos) + ("▯" * blocos_vazios)
+    else:
+        barraLuck = "▯" * PLAYER_STATS["max_luck"]
+    if PLAYER_STATS["str"] > 0:
+            dif = (PLAYER_STATS["str"] * 100) / PLAYER_STATS["max_str"]
+            if dif > 100:
+                dif = 100
+            blocos_preenchidos = int(PLAYER_STATS["max_str"] * (dif / 100))
+            if blocos_preenchidos <= 0:
+                blocos_preenchidos = 1
+            blocos_vazios = PLAYER_STATS["max_str"] - blocos_preenchidos
+            barraStr = ("▮" * blocos_preenchidos) + ("▯" * blocos_vazios)
+    else:
+        barraStr = "▯" * PLAYER_STATS["max_str"]
+    return barraLuck, barraStr
 
 def skill_menu():
     while(True):
         option = -1
-        MELHORIAS = ["FORÇA", "VELOCIDADE", "SORTE"]
-        MELHORIAS_STATS = ["str", "speed", "luck"]
+        MELHORIAS = ["FORÇA", "SORTE"]
+        MELHORIAS_STATS = ["str", "luck"]
+        MELHORIAS_STATS_MAX = ["max_str", "max_luck"]
         limpar_tela()
+        barraLuck, barraStr = skill_menu_barras()
         print("MELHORIAS")
         print(f"PONTOS DISPONIVEIS: {PLAYER_STATS['sp']}\n")
-        print(f"[1] FORÇA: {PLAYER_STATS['str']}\nDiminui a dificuldade de puxar um peixe de alta raridade")
-        print(f"[2] VELOCIDADE: {PLAYER_STATS['speed']}\nDiminui o tempo de pesca")
-        print(f"[3] SORTE: {PLAYER_STATS['luck']}\nAumenta a presença de peixes de alta raridade")
+        print(f"[1] FORÇA: {barraStr}")
+        if PLAYER_STATS["str"] < PLAYER_STATS["max_str"]:
+            print(f"Custo: {1+PLAYER_STATS['str']}")
+        print("Diminui o tempo de pesca.")
+        print(f"[2] SORTE: {barraLuck}")
+        if PLAYER_STATS["luck"] < PLAYER_STATS["max_luck"]:
+            print(f"Custo: 1")
+        print("Aumenta a presença de peixes de alta raridade.")
         print("[0] PARA VOLTAR")
         try:
             option = int(input("\nESCOLHA: "))
             if (option == 0):
                 break
-            elif (PLAYER_STATS["sp"] > 0):
-                if (option <= 3):
-                    try:
-                        pontos = int(input("\nPONTOS A ATRIBUIR: "))
-                        if pontos > PLAYER_STATS["sp"]:
-                            print(f"VOCÊ NÃO TEM {pontos} PONTOS DISPONIVEIS.")
-                            os.system("pause")
-                        if pontos == 0:
-                            continue
-                        elif pontos <= PLAYER_STATS["sp"]:
-                            limpar_tela()
-                            print(f"ATRIBUIR {pontos} EM {MELHORIAS[option - 1]}?")
-                            try:
-                                confirmacao = str(input("\n[S/N]: "))
-                                if confirmacao.upper() == "S":
-                                    PLAYER_STATS[MELHORIAS_STATS[option - 1]] += pontos
-                                    PLAYER_STATS["sp"] -= pontos
-                                elif confirmacao.upper() == "N":
-                                    break
-                            except ValueError:
-                                confirmacao = ""
-                    except ValueError:
-                        pontos = -1
+            elif (option < len(MELHORIAS) + 1):
+                if (MELHORIAS_STATS[option - 1] != "luck"):
+                    custo = 1 + PLAYER_STATS[MELHORIAS_STATS[option - 1]]
+                else:
+                    custo = 1
+                if (PLAYER_STATS[MELHORIAS_STATS[option - 1]] < PLAYER_STATS[MELHORIAS_STATS_MAX[option - 1]]):
+                    if (PLAYER_STATS["sp"] > 0):
+                        if PLAYER_STATS["sp"] >= custo:
+                            PLAYER_STATS[MELHORIAS_STATS[option - 1]] += 1
+                            PLAYER_STATS["sp"] -= 1
+                        else:
+                            print(f"VOCÊ NÃO POSSUI {custo} PONTOS DE MELHORIA")
+                            time.sleep(0.3)
+                            pausar_tela()
+                    else:
+                        print(f"VOCÊ NÃO POSSUI {custo} PONTOS DE MELHORIA")
+                        time.sleep(0.3)
+                        pausar_tela()
+                else:
+                    print(f"VOCÊ JÁ ATINGIU O MÁXIMO DE {MELHORIAS[option - 1]}")
+                    time.sleep(0.3)
+                    pausar_tela()
+            else:
+                print("OPÇÃO INVÁLIDA")
+                pausar_tela()
         except ValueError:
             option = -1
 
@@ -358,7 +401,7 @@ while(True):
                     if j[k] in PLAYER_FISHES[i]:
                         print(f"[{j[k]} - {PLAYER_FISHES[i][j[k]]:.2f} cm]", end=" ", flush=True)
                 print("")
-            os.system("pause")
+            pausar_tela()
         elif (option == 3):
             shop_menu()
         elif (option == 4):
@@ -367,6 +410,6 @@ while(True):
             print("\nDEBUG RARIDADES")
             CHANCES = calcular_raridades()
             print("Secreto: {}\nLendário: {}\nÉpico: {}\nRaro: {}\nIncomum: {}\nComum: {}\n".format(CHANCES["Secreto"], CHANCES["Lendário"], CHANCES["Épico"], CHANCES["Raro"], CHANCES["Incomum"], CHANCES["Comum"]))
-            os.system("pause")
+            pausar_tela()
     except ValueError:
         option = -1
