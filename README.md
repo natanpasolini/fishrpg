@@ -9,8 +9,8 @@ Versionamento:
 - 00Y -> Versão (Ex: 01A) 
 
 > ### Sistemas:
->- Geração de peixe baseado em raridade com variação de tamanhos.
->- Tempo de pesca baseado nos atributos do jogador
->- Códex de peixes
->- Loja para venda de peixes e compra de itens e varas de pescas melhores
->- Sistema de nível com atributos (força, velocidade e sorte)
+>- Geração de peixe baseado em raridade com variação de tamanhos;
+>- Tempo de pesca baseado nos atributos do jogador;
+>- Códex de peixes com tamanho recorde pescado;
+>- Loja para compra de itens e varas de pescas melhores; (WIP)
+>- Sistema de nível com atributos;
