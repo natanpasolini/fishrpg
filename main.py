@@ -3,10 +3,10 @@ import os
 import random
 import math
 
-version = "A04"
+version = "A04b"
 
 PLAYER_STATS = {
-    "rod": 1,
+    "rod": 0,
     "str": 0,
     "max_str": 5,
     "luck": 0,
@@ -16,8 +16,17 @@ PLAYER_STATS = {
     "max_level": 30,
     "xp": 0,
     "xplvlup": 2,
-    "sp": 0,
-    "sp_bought": 0
+    "sp": 0
+}
+
+PLAYER_INVENTORY = {
+    "VARAS": ["GRAVETO"],
+    "POÇÕES": []
+}
+
+RODS_STATS = {
+    "GRAVETO": {"luck": 0.1,"str": 0.05},
+    "VARA COMUM": {"luck": 0.3,"str": 0.15}
 }
 
 BASE_CHANCES = {
@@ -67,15 +76,12 @@ PLAYER_FISHES = {
 
 SHOP_ITEMS = {
     "VARAS": {
-        "Vara1": 10,
-        "Vara2": 2
+        "VARA COMUM": [2,"+0.15 Sorte +0.05 Força"],
+        "VARA INCOMUM": [12,"Descrição"]
     },
     "POÇÕES": {
-        "Poção 1": 2,
-        "Poção 2": 4,
-        "Poção 3": 0
-    },
-    "PONTOS": 100
+        "Poção 1": [3,"Não faz nada ainda..."]
+    }
 }
 
 def pausar_tela():
@@ -136,7 +142,7 @@ def player_status_menu():
         print(f"XP: LVL MAX")
 
 def calcular_raridades():
-    rod_bonus = PLAYER_STATS["rod"] * 1.7
+    rod_bonus = RODS_STATS[list(RODS_STATS)[PLAYER_STATS["rod"]]]["luck"] * 1.7
     luck_bonus = PLAYER_STATS["luck"] * 3
     BONUS_TOTAL = rod_bonus + luck_bonus
     CHANCES = BASE_CHANCES.copy()
@@ -183,7 +189,7 @@ def gerar_peixe():
         else:
             indice += 1
     pprice = random.uniform(0,2) * (psize * 0.3) + 3 * (indice * 3)
-    pxp = random.randint(BASE_XP[prarity],math.ceil(BASE_XP[prarity]*1.3)) * PLAYER_STATS["rod"]
+    pxp = random.randint(BASE_XP[prarity],math.ceil(BASE_XP[prarity]*1.3))
     return prarity, psize, pxp, pprice
 
 def pesca():
@@ -307,11 +313,10 @@ def shop_menu():
     while True:
         limpar_tela()
         print("LOJA")
-        print(f"FISH COINS: {PLAYER_STATS['money']}\n")
+        print(f"FISH COINS: {PLAYER_STATS['money']:.2f}\n")
         option = -1
         j = 0
         largura = 12
-        o_pontos = -1
         for i in SHOP_ITEMS:
             j += 1
             if j % 2 != 0:
@@ -320,58 +325,51 @@ def shop_menu():
                 print(" " * espaco, end="", flush=True)
             else:
                 print(f"[{j}] {i}")
-        print("\n[0] VOLTAR\n")
+        if len(SHOP_ITEMS) % 2 != 0:
+            print("\n[0] VOLTAR\n")
+        else:
+            print("[0] VOLTAR\n")
         try:
             option = int(input("ESCOLHA: "))
             if option == 0:
                 break
             elif option <= len(SHOP_ITEMS):
                 shop_option = list(SHOP_ITEMS)[option - 1]
-                if shop_option != "Pontos":
+                while True:
+                    limpar_tela()
+                    print("LOJA")
+                    print(f"FISH COINS: {PLAYER_STATS['money']:.2f}\n")
+                    j = 0
                     for i in SHOP_ITEMS[shop_option]:
-                        print(i, SHOP_ITEMS[shop_option][i])
-                else:
-                    while True:
-                        limpar_tela()
-                        if PLAYER_STATS["sp_bought"] >= 1:
-                            preco_ponto = math.ceil(100 * (PLAYER_STATS["sp_bought"] * 1.3))
+                        j += 1
+                        if i not in PLAYER_INVENTORY[shop_option]:
+                            custo = SHOP_ITEMS[shop_option][i][0]
+                            fc = "FC"
                         else:
-                            preco_ponto = math.ceil(100 * (1 * 1.3))
-                        print("PONTO DE MELHORIA")
-                        print(f"FISH COINS: {PLAYER_STATS['money']:.2f}\n")
-                        print(f"[PREÇO ATUAL: {preco_ponto}]\n")
-                        print("O PREÇO AUMENTA EXPONENCIALMENTE A CADA PONTO COMPRADO!")
-                        print("DIGITE A QUANTIDADE QUE DESEJA COMPRAR (0 RETORNA)\n")
-                        try:
-                            option = int(input("QUANTIDADE: "))
-                            if option == 0:
-                                break
-                            elif option > 0:
-                                limpar_tela()
-                                x = PLAYER_STATS["sp_bought"]
-                                y = option
-                                for i in range(y):
-                                    x += 1
-                                preco_ponto = math.ceil(100 * (x * 1.3))
-                                print("PONTO DE MELHORIA\n")
-                                print(f"FISH COINS: {PLAYER_STATS['money']:.2f}\n")
-                                print(f"COMPRAR {y} PONTOS POR [{preco_ponto} FC]?")
-                                try:
-                                    option = str(input("[S/N]: "))
-                                    option = option.upper()
-                                    if option == "S":
-                                        if PLAYER_STATS["money"] >= preco_ponto:
-                                            PLAYER_STATS["money"] -= preco_ponto
-                                            PLAYER_STATS["sp"] += y
-                                        else:
-                                            print("VOCÊ NÃO TEM DINHEIRO SUFICIENTE")
-                                            time.sleep(0.4)
-                                    elif option == "N":
-                                        continue
-                                except ValueError:
-                                    option = -1
-                        except ValueError:
-                            option = -1
+                            custo = "COMPRADO"
+                            fc = ""
+                        print(f"[{j}] {i} - {custo} {fc}\n{SHOP_ITEMS[shop_option][i][1]}")
+                    print("[0] VOLTAR\n")
+                    try:
+                        option = int(input("ESCOLHA: "))
+                        if option == 0:
+                            break
+                        elif option <= len(SHOP_ITEMS[shop_option]):
+                            item = list(SHOP_ITEMS[shop_option])[option - 1]
+                            if item not in PLAYER_INVENTORY[shop_option]:
+                                if PLAYER_STATS["money"] >= custo:
+                                    PLAYER_STATS["money"] -= custo
+                                    PLAYER_INVENTORY[shop_option].append(item)
+                                    print(f"{item} ADQUIRIDO!")
+                                    pausar_tela()
+                                else:
+                                    print("DINHEIRO INSUFICIENTE.")
+                                    pausar_tela()
+                            else:
+                                print("VOCÊ JÁ POSSUI ESTE ITEM.")
+                                pausar_tela()
+                    except ValueError:
+                        option = -1
         except ValueError:
             option = -1
 
