@@ -435,7 +435,6 @@ while(True):
     refresh_player_stats()
     limpar_tela()
     print(f"PY FISH GAME v.{version}\n")
-    print(list(PLAYER_INVENTORY["VARAS"])[0])
     player_status_menu()
     print("\n[1] PESCAR      [2] CÓDEX")
     print("[3] LOJA        [4] MELHORIAS")
