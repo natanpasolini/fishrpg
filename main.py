@@ -3,7 +3,7 @@ import os
 import random
 import math
 
-version = "A04b"
+version = "A04c"
 
 PLAYER_STATS = {
     "rod": 0,
@@ -26,7 +26,8 @@ PLAYER_INVENTORY = {
 
 RODS_STATS = {
     "GRAVETO": {"luck": 0.1,"str": 0.05},
-    "VARA COMUM": {"luck": 0.3,"str": 0.15}
+    "VARA COMUM": {"luck": 0.3,"str": 0.15},
+    "VARA INCOMUM": {"luck": 0.6,"str": 0.3}
 }
 
 BASE_CHANCES = {
@@ -76,8 +77,8 @@ PLAYER_FISHES = {
 
 SHOP_ITEMS = {
     "VARAS": {
-        "VARA COMUM": [2,"+0.15 Sorte +0.05 Força"],
-        "VARA INCOMUM": [12,"Descrição"]
+        "VARA COMUM": [2,f"+{RODS_STATS['VARA COMUM']['luck']} Sorte +{RODS_STATS['VARA COMUM']['str']} Força"],
+        "VARA INCOMUM": [12,f"+{RODS_STATS['VARA INCOMUM']['luck']} Sorte +{RODS_STATS['VARA INCOMUM']['str']} Força"]
     },
     "POÇÕES": {
         "Poção 1": [3,"Não faz nada ainda..."]
@@ -337,7 +338,7 @@ def shop_menu():
                 shop_option = list(SHOP_ITEMS)[option - 1]
                 while True:
                     limpar_tela()
-                    print("LOJA")
+                    print(f"LOJA > {shop_option}")
                     print(f"FISH COINS: {PLAYER_STATS['money']:.2f}\n")
                     j = 0
                     for i in SHOP_ITEMS[shop_option]:
@@ -357,6 +358,7 @@ def shop_menu():
                         elif option <= len(SHOP_ITEMS[shop_option]):
                             item = list(SHOP_ITEMS[shop_option])[option - 1]
                             if item not in PLAYER_INVENTORY[shop_option]:
+                                custo = SHOP_ITEMS[shop_option][list(SHOP_ITEMS[shop_option])[option - 1]][0]
                                 if PLAYER_STATS["money"] >= custo:
                                     PLAYER_STATS["money"] -= custo
                                     PLAYER_INVENTORY[shop_option].append(item)
@@ -373,15 +375,71 @@ def shop_menu():
         except ValueError:
             option = -1
 
+def inventory_menu():
+    while True:
+        option = -1
+        limpar_tela()
+        print("INVENTÁRIO\n")
+        j = 0
+        for i in PLAYER_INVENTORY:
+            j += 1
+            if i != "POÇÕES":
+                if i == "VARAS":
+                    item_equipado = 'rod'
+                print(f"[{j}] {i} [EQUIPADO: {list(RODS_STATS)[PLAYER_STATS[item_equipado]]}]")
+            else:
+                print(f"[{j}] {i}")
+        print("[0] VOLTAR\n")
+        try:
+            option = int(input("ESCOLHA: "))
+            if option == 0:
+                break
+            elif option <= len(PLAYER_INVENTORY):
+                limpar_tela()
+                inv_option = list(PLAYER_INVENTORY)[option - 1]
+                print(f"INVENTÁRIO > {inv_option}\n")
+                j = 0
+                for i in PLAYER_INVENTORY[inv_option]:
+                    j +=1
+                    if i == "GRAVETO":
+                        print(f"[{j}] {i}\nNão oferece nenhum bônus.")
+                    else:
+                        print(f"[{j}] {i}\n{SHOP_ITEMS[inv_option][i][1]}")
+                print("[0] VOLTAR\n")
+                try:
+                    option = int(input("EQUIPAR: "))
+                    if option == 0:
+                        continue
+                    elif option <= len(PLAYER_INVENTORY[inv_option]):
+                        equipar = list(PLAYER_INVENTORY[inv_option])[option - 1]
+                        for i in range(len(PLAYER_INVENTORY[inv_option])):
+                            if list(PLAYER_INVENTORY[inv_option])[i] == equipar:
+                                break
+                        PLAYER_STATS["rod"] = i
+                        print(f"{equipar} EQUIPADO!")
+                        pausar_tela()
+                    else:
+                        print("OPÇÃO INVÁLIDA")
+                        pausar_tela()
+                except ValueError:
+                    option = -1
+            else:
+                print("OPÇÃO INVÁLIDA.")
+                pausar_tela()
+        except ValueError:
+            option = -1
+
 startup()
 while(True):
     option = -1
     refresh_player_stats()
     limpar_tela()
     print(f"PY FISH GAME v.{version}\n")
+    print(list(PLAYER_INVENTORY["VARAS"])[0])
     player_status_menu()
-    print("\n[1] PESCA       [2] CÓDEX")
+    print("\n[1] PESCAR      [2] CÓDEX")
     print("[3] LOJA        [4] MELHORIAS")
+    print("[5] INVENTÁRIO")
     print("[0] SAIR")
     try:
         option = int(input("\nESCOLHA: "))
@@ -404,6 +462,8 @@ while(True):
             shop_menu()
         elif (option == 4):
             skill_menu()
+        elif (option == 5):
+            inventory_menu()
         elif (option == 999):
             print("\nDEBUG RARIDADES")
             CHANCES = calcular_raridades()
