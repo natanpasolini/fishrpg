@@ -3,7 +3,7 @@ import os
 import random
 import math
 
-version = "A04c"
+version = "B01"
 
 PLAYER_STATS = {
     "rod": 0,
@@ -77,8 +77,8 @@ PLAYER_FISHES = {
 
 SHOP_ITEMS = {
     "VARAS": {
-        "VARA COMUM": [2,f"+{RODS_STATS['VARA COMUM']['luck']} Sorte +{RODS_STATS['VARA COMUM']['str']} Força"],
-        "VARA INCOMUM": [12,f"+{RODS_STATS['VARA INCOMUM']['luck']} Sorte +{RODS_STATS['VARA INCOMUM']['str']} Força"]
+        "VARA COMUM": [6,f"+{RODS_STATS['VARA COMUM']['luck']} Sorte +{RODS_STATS['VARA COMUM']['str']} Força"],
+        "VARA INCOMUM": [30,f"+{RODS_STATS['VARA INCOMUM']['luck']} Sorte +{RODS_STATS['VARA INCOMUM']['str']} Força"]
     },
     "POÇÕES": {
         "Poção 1": [3,"Não faz nada ainda..."]
@@ -375,6 +375,43 @@ def shop_menu():
         except ValueError:
             option = -1
 
+def codex_menu():
+    while True:
+        limpar_tela()
+        print("INVENTÁRIO > CÓDEX\n")
+        k = 0
+        largura = 12
+        for i in reversed(PEIXES):
+            j = PEIXES[i]
+            k += 1
+            if k % 2 != 0:
+                espaco = largura - len(i)
+                print(f"[{k}] {str(i).upper()} [{len(PLAYER_FISHES[i])}/{len(PEIXES[i])}]", end=f"", flush=True)
+                print(" " * espaco, end="", flush=True)
+            else:
+                print(f"[{k}] {str(i).upper()} [{len(PLAYER_FISHES[i])}/{len(PEIXES[i])}]")
+        print("[0] VOLTAR\n")
+        try:
+            option = int(input("ESCOLHA: "))
+            if option == 0:
+                break
+            if option <= len(PEIXES):
+                limpar_tela()
+                codex_option = list(reversed(PEIXES))[option - 1]
+                print(f"INVENTÁRIO > CÓDEX > {codex_option.upper()}\n")
+                for i in PEIXES[codex_option]:
+                    if i in PLAYER_FISHES[codex_option]:
+                        print(f"[{i} - {PLAYER_FISHES[codex_option][i]:.2f} cm]", end=" ", flush=True)
+                print("\n[0] VOLTAR\n")
+                try:
+                    option = int(input("ESCOLHA: "))
+                    if option == 0:
+                        pass
+                except ValueError:
+                    option = -1
+        except ValueError:
+            option = -1
+
 def inventory_menu():
     while True:
         option = -1
@@ -389,11 +426,15 @@ def inventory_menu():
                 print(f"[{j}] {i} [EQUIPADO: {list(RODS_STATS)[PLAYER_STATS[item_equipado]]}]")
             else:
                 print(f"[{j}] {i}")
+        codex_number = len(PLAYER_INVENTORY) + 1
+        print(f"[{codex_number}] CÓDEX")
         print("[0] VOLTAR\n")
         try:
             option = int(input("ESCOLHA: "))
             if option == 0:
                 break
+            elif option == codex_number:
+                codex_menu()
             elif option <= len(PLAYER_INVENTORY):
                 limpar_tela()
                 inv_option = list(PLAYER_INVENTORY)[option - 1]
@@ -412,8 +453,8 @@ def inventory_menu():
                         continue
                     elif option <= len(PLAYER_INVENTORY[inv_option]):
                         equipar = list(PLAYER_INVENTORY[inv_option])[option - 1]
-                        for i in range(len(PLAYER_INVENTORY[inv_option])):
-                            if list(PLAYER_INVENTORY[inv_option])[i] == equipar:
+                        for i in range(len(RODS_STATS)):
+                            if list(RODS_STATS)[i] == equipar:
                                 break
                         PLAYER_STATS["rod"] = i
                         print(f"{equipar} EQUIPADO!")
@@ -436,9 +477,8 @@ while(True):
     limpar_tela()
     print(f"PY FISH GAME v.{version}\n")
     player_status_menu()
-    print("\n[1] PESCAR      [2] CÓDEX")
+    print("\n[1] PESCAR      [2] INVENTÁRIO")
     print("[3] LOJA        [4] MELHORIAS")
-    print("[5] INVENTÁRIO")
     print("[0] SAIR")
     try:
         option = int(input("\nESCOLHA: "))
@@ -448,21 +488,11 @@ while(True):
         elif (option == 1):
             pesca()
         elif (option == 2):
-            print("CÓDEX DE PEIXES")
-            for i in reversed(PEIXES):
-                j = PEIXES[i]
-                print(f"{str(i).upper()} [{len(PLAYER_FISHES[i])}/{len(PEIXES[i])}]")
-                for k in range(len(j)):
-                    if j[k] in PLAYER_FISHES[i]:
-                        print(f"[{j[k]} - {PLAYER_FISHES[i][j[k]]:.2f} cm]", end=" ", flush=True)
-                print("")
-            pausar_tela()
+            inventory_menu()
         elif (option == 3):
             shop_menu()
         elif (option == 4):
             skill_menu()
-        elif (option == 5):
-            inventory_menu()
         elif (option == 999):
             print("\nDEBUG RARIDADES")
             CHANCES = calcular_raridades()
