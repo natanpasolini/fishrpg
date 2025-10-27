@@ -197,6 +197,9 @@ def player_status_menu():
 def calcular_raridades():
     rod_bonus = RODS_STATS[list(RODS_STATS)[PLAYER_STATS["rod"]]]["luck"] * 1.7
     luck_bonus = PLAYER_STATS["luck"] * 3
+    if POTIONS_IN_USE["POÇÃO DA SORTE"][1] >= 1:
+        POTIONS_IN_USE["POÇÃO DA SORTE"][1] -= 1
+        luck_bonus += PLAYER_STATS["potion_level"]
     BONUS_TOTAL = rod_bonus + luck_bonus
     CHANCES = BASE_CHANCES.copy()
     CHANCES["Comum"] = max(7, BASE_CHANCES["Comum"] - BONUS_TOTAL)
@@ -235,6 +238,9 @@ def gerar_peixe():
     else:
         prarity = "Comum"
     psize = random.uniform(FISHES_SIZES[prarity][0],FISHES_SIZES[prarity][1])
+    if POTIONS_IN_USE["POÇÃO DE TAMANHO"][1] >= 1:
+        POTIONS_IN_USE["POÇÃO DE TAMANHO"][1] -= 1
+        psize *= PLAYER_STATS["potion_level"] * 1.5
     indice = 0
     for i in reversed(PEIXES):
         if i == prarity:
@@ -283,7 +289,12 @@ def pesca():
         if PLAYER_STATS["str"] == 1:
             tempo_r = 0.85
         else:
-            tempo_r = (PLAYER_STATS["str"] + RODS_STATS[list(RODS_STATS)[PLAYER_STATS["rod"]]]["str"]) * 0.5
+            if POTIONS_IN_USE["POÇÃO DE FORÇA"][1] >= 1:
+                POTIONS_IN_USE["POÇÃO DE FORÇA"][1] -= 1
+                adicionais = RODS_STATS[list(RODS_STATS)[PLAYER_STATS["rod"]]]["str"] + PLAYER_STATS["potion_level"]
+            else:
+                adicionais = RODS_STATS[list(RODS_STATS)[PLAYER_STATS["rod"]]]["str"]
+            tempo_r = (PLAYER_STATS["str"] + adicionais) * 0.5
     else:
         tempo_r = 0.7
     tempo = (10 / tempo_r)
