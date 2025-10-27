@@ -34,6 +34,17 @@ RODS_STATS = {
     "VARA SECRETA": {"luck": 10,"str": 10}
 }
 
+ITEMS_DESC = {
+    "GRAVETO": f"NÃO OFERECE NENHUM BÔNUS",
+    "VARA SIMPLES": f"+{RODS_STATS['VARA SIMPLES']['luck']} SORTE +{RODS_STATS['VARA SIMPLES']['str']} FORÇA",
+    "VARA INCOMUM": f"+{RODS_STATS['VARA INCOMUM']['luck']} SORTE +{RODS_STATS['VARA INCOMUM']['str']} FORÇA",
+    "VARA RARA": f"+{RODS_STATS['VARA RARA']['luck']} SORTE +{RODS_STATS['VARA RARA']['str']} FORÇA",
+    "VARA ÉPICA": f"+{RODS_STATS['VARA ÉPICA']['luck']} SORTE +{RODS_STATS['VARA ÉPICA']['str']} FORÇA",
+    "VARA LENDÁRIA": f"+{RODS_STATS['VARA LENDÁRIA']['luck']} SORTE +{RODS_STATS['VARA LENDÁRIA']['str']} FORÇA",
+    "VARA SECRETA": f"+{RODS_STATS['VARA SECRETA']['luck']} SORTE +{RODS_STATS['VARA SECRETA']['str']} FORÇA",
+    "POÇÃO DA SORTE I": f"+1 SORTE (3 usos)"
+}
+
 BASE_CHANCES = {
     "Secreto": 0.2,
     "Lendário": 0.7,
@@ -81,12 +92,12 @@ PLAYER_FISHES = {
 
 SHOP_ITEMS = {
     "VARAS": {
-        "VARA SIMPLES": [6,f"+{RODS_STATS['VARA SIMPLES']['luck']} SORTE +{RODS_STATS['VARA SIMPLES']['str']} FORÇA"],
-        "VARA INCOMUM": [30,f"+{RODS_STATS['VARA INCOMUM']['luck']} SORTE +{RODS_STATS['VARA INCOMUM']['str']} FORÇA"],
-        "VARA RARA": [90,f"+{RODS_STATS['VARA RARA']['luck']} SORTE +{RODS_STATS['VARA RARA']['str']} FORÇA"]
+        "VARA SIMPLES": [6,f"{ITEMS_DESC['VARA SIMPLES']}"],
+        "VARA INCOMUM": [30,f"{ITEMS_DESC['VARA INCOMUM']}"],
+        "VARA RARA": [90,f"{ITEMS_DESC['VARA RARA']}"]
     },
     "POÇÕES": {
-        "Poção 1": [3,"Não faz nada ainda..."]
+        "POÇÃO DA SORTE I": [3,f"{ITEMS_DESC["POÇÃO DA SORTE I"]}"]
     }
 }
 
@@ -480,10 +491,7 @@ def inventory_menu():
                 j = 0
                 for i in PLAYER_INVENTORY[inv_option]:
                     j +=1
-                    if i == "GRAVETO":
-                        print(f"[{j}] {i}\nNão oferece nenhum bônus.")
-                    else:
-                        print(f"[{j}] {i}\n+{RODS_STATS[i]["luck"]} SORTE +{RODS_STATS[i]["str"]} FORÇA")
+                    print(f"[{j}] {i}\n{ITEMS_DESC[i]}")
                 print("[0] VOLTAR\n")
                 try:
                     option = int(input("EQUIPAR: "))
