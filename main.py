@@ -25,9 +25,13 @@ PLAYER_INVENTORY = {
 }
 
 RODS_STATS = {
-    "GRAVETO": {"luck": 0.1,"str": 0.05},
-    "VARA COMUM": {"luck": 0.3,"str": 0.15},
-    "VARA INCOMUM": {"luck": 0.6,"str": 0.3}
+    "GRAVETO": {"luck": 0,"str": 0},
+    "VARA SIMPLES": {"luck": 0.5,"str": 0.5},
+    "VARA INCOMUM": {"luck": 1.2,"str": 1.6},
+    "VARA RARA": {"luck": 2,"str": 2.3},
+    "VARA ÉPICA": {"luck": 3,"str": 3},
+    "VARA LENDÁRIA": {"luck": 5,"str": 5},
+    "VARA SECRETA": {"luck": 10,"str": 10}
 }
 
 BASE_CHANCES = {
@@ -77,8 +81,9 @@ PLAYER_FISHES = {
 
 SHOP_ITEMS = {
     "VARAS": {
-        "VARA COMUM": [6,f"+{RODS_STATS['VARA COMUM']['luck']} Sorte +{RODS_STATS['VARA COMUM']['str']} Força"],
-        "VARA INCOMUM": [30,f"+{RODS_STATS['VARA INCOMUM']['luck']} Sorte +{RODS_STATS['VARA INCOMUM']['str']} Força"]
+        "VARA SIMPLES": [6,f"+{RODS_STATS['VARA SIMPLES']['luck']} SORTE +{RODS_STATS['VARA SIMPLES']['str']} FORÇA"],
+        "VARA INCOMUM": [30,f"+{RODS_STATS['VARA INCOMUM']['luck']} SORTE +{RODS_STATS['VARA INCOMUM']['str']} FORÇA"],
+        "VARA RARA": [90,f"+{RODS_STATS['VARA RARA']['luck']} SORTE +{RODS_STATS['VARA RARA']['str']} FORÇA"]
     },
     "POÇÕES": {
         "Poção 1": [3,"Não faz nada ainda..."]
@@ -193,6 +198,37 @@ def gerar_peixe():
     pxp = random.randint(BASE_XP[prarity],math.ceil(BASE_XP[prarity]*1.3))
     return prarity, psize, pxp, pprice
 
+def pesca_especiais(prarity):
+    item_pescado = False
+    if prarity == "Épico":
+        if "VARA ÉPICA" not in PLAYER_INVENTORY["VARAS"]:
+            x = random.randint(0,100)
+            if x <= 30:
+                item_pescado = True
+                PLAYER_INVENTORY["VARAS"].append("VARA ÉPICA")
+                print("VOCÊ ENCONTROU A VARA ÉPICA!")
+            else:
+                item_pescado = False
+    elif prarity == "Lendário":
+        if "VARA LENDÁRIA" not in PLAYER_INVENTORY["VARAS"]:
+            x = random.randint(0,100)
+            if x <= 30:
+                item_pescado = True
+                PLAYER_INVENTORY["VARAS"].append("VARA LENDÁRIA")
+                print("VOCÊ ENCONTROU A VARA LENDÁRIA!")
+            else:
+                item_pescado = False
+    elif prarity == "Secreto":
+        if "VARA SECRETA" not in PLAYER_INVENTORY["VARAS"]:
+            x = random.randint(0,100)
+            if x <= 50:
+                item_pescado = True
+                PLAYER_INVENTORY["VARAS"].append("VARA SECRETA")
+                print("VOCÊ ENCONTROU A VARA SECRETA!")
+            else:
+                item_pescado = False
+    return item_pescado
+
 def pesca():
     limpar_tela()
     prarity, psize, pxp, pprice = gerar_peixe()
@@ -200,7 +236,7 @@ def pesca():
         if PLAYER_STATS["str"] == 1:
             tempo_r = 0.85
         else:
-            tempo_r = (PLAYER_STATS["str"] * 0.5)
+            tempo_r = (PLAYER_STATS["str"] + RODS_STATS[list(RODS_STATS)[PLAYER_STATS["rod"]]]["str"]) * 0.5
     else:
         tempo_r = 0.7
     tempo = (10 / tempo_r)
@@ -211,27 +247,29 @@ def pesca():
         time.sleep(tempo / 10)
     limpar_tela()
     print("PESCA\n")
-    peixe = random.randint(0,(len(PEIXES[prarity]) - 1))
-    pnome = PEIXES[prarity][peixe]
-    xp_extra = 0
-    if pnome not in PLAYER_FISHES[prarity]:
-        PLAYER_FISHES[prarity][pnome] = psize
-        x = 1
-        for i in reversed(PEIXES):
-            if i == prarity:
-                xp_extra = 2 * x
-                print(f"NOVA DESCOBERTA! (+{xp_extra} XP)")
-                break
-            else:
-                x += 1
-    else:
-        if psize > PLAYER_FISHES[prarity][pnome]:
+    item_pescado = pesca_especiais(prarity)
+    if item_pescado == False:
+        peixe = random.randint(0,(len(PEIXES[prarity]) - 1))
+        pnome = PEIXES[prarity][peixe]
+        xp_extra = 0
+        if pnome not in PLAYER_FISHES[prarity]:
             PLAYER_FISHES[prarity][pnome] = psize
-            print("NOVO RECORDE!")
-    print(f"[{prarity}]\n{pnome}\n{psize:.2f} cm")
-    print(f"+{pxp} XP  +{pprice:.2f} FISH COINS\n")
-    PLAYER_STATS["xp"] += pxp + xp_extra
-    PLAYER_STATS["money"] += pprice
+            x = 1
+            for i in reversed(PEIXES):
+                if i == prarity:
+                    xp_extra = 2 * x
+                    print(f"NOVA DESCOBERTA! (+{xp_extra} XP)")
+                    break
+                else:
+                    x += 1
+        else:
+            if psize > PLAYER_FISHES[prarity][pnome]:
+                PLAYER_FISHES[prarity][pnome] = psize
+                print("NOVO RECORDE!")
+        print(f"[{prarity}]\n{pnome}\n{psize:.2f} cm")
+        print(f"+{pxp} XP  +{pprice:.2f} FISH COINS\n")
+        PLAYER_STATS["xp"] += pxp + xp_extra
+        PLAYER_STATS["money"] += pprice
     pausar_tela()
 
 def skill_menu_barras():
@@ -445,7 +483,7 @@ def inventory_menu():
                     if i == "GRAVETO":
                         print(f"[{j}] {i}\nNão oferece nenhum bônus.")
                     else:
-                        print(f"[{j}] {i}\n{SHOP_ITEMS[inv_option][i][1]}")
+                        print(f"[{j}] {i}\n+{RODS_STATS[i]["luck"]} SORTE +{RODS_STATS[i]["str"]} FORÇA")
                 print("[0] VOLTAR\n")
                 try:
                     option = int(input("EQUIPAR: "))
