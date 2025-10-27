@@ -21,7 +21,7 @@ PLAYER_STATS = {
 
 PLAYER_INVENTORY = {
     "VARAS": ["GRAVETO"],
-    "POÇÕES": []
+    "POÇÕES": {}
 }
 
 RODS_STATS = {
@@ -42,7 +42,7 @@ ITEMS_DESC = {
     "VARA ÉPICA": f"+{RODS_STATS['VARA ÉPICA']['luck']} SORTE +{RODS_STATS['VARA ÉPICA']['str']} FORÇA",
     "VARA LENDÁRIA": f"+{RODS_STATS['VARA LENDÁRIA']['luck']} SORTE +{RODS_STATS['VARA LENDÁRIA']['str']} FORÇA",
     "VARA SECRETA": f"+{RODS_STATS['VARA SECRETA']['luck']} SORTE +{RODS_STATS['VARA SECRETA']['str']} FORÇA",
-    "POÇÃO DA SORTE I": f"+1 SORTE (3 usos)"
+    "POÇÃO DA SORTE I": f"+1 SORTE"
 }
 
 BASE_CHANCES = {
@@ -240,6 +240,16 @@ def pesca_especiais(prarity):
                 item_pescado = False
     return item_pescado
 
+def pesca_efeitos():
+    potions = len(PLAYER_INVENTORY["POÇÕES"])
+    if potions > 0:
+        for i in PLAYER_INVENTORY["POÇÕES"]:
+            print(PLAYER_INVENTORY["POÇÕES"])
+            PLAYER_INVENTORY["POÇÕES"][i] -= 1
+            print(PLAYER_INVENTORY["POÇÕES"])
+            print(i)
+        
+
 def pesca():
     limpar_tela()
     prarity, psize, pxp, pprice = gerar_peixe()
@@ -392,10 +402,10 @@ def shop_menu():
                     j = 0
                     for i in SHOP_ITEMS[shop_option]:
                         j += 1
-                        if i not in PLAYER_INVENTORY[shop_option]:
+                        if i not in PLAYER_INVENTORY[shop_option] or shop_option == "POÇÕES":
                             custo = SHOP_ITEMS[shop_option][i][0]
                             fc = "FC"
-                        else:
+                        elif shop_option != "POÇÕES":
                             custo = "COMPRADO"
                             fc = ""
                         print(f"[{j}] {i} - {custo} {fc}\n{SHOP_ITEMS[shop_option][i][1]}")
@@ -406,19 +416,33 @@ def shop_menu():
                             break
                         elif option <= len(SHOP_ITEMS[shop_option]):
                             item = list(SHOP_ITEMS[shop_option])[option - 1]
-                            if item not in PLAYER_INVENTORY[shop_option]:
+                            if shop_option != "POÇÕES":
+                                if item not in PLAYER_INVENTORY[shop_option]:
+                                    custo = SHOP_ITEMS[shop_option][list(SHOP_ITEMS[shop_option])[option - 1]][0]
+                                    if PLAYER_STATS["money"] >= custo:
+                                        PLAYER_STATS["money"] -= custo
+                                        PLAYER_INVENTORY[shop_option].append(item)
+                                        print(f"{item} ADQUIRIDO!")
+                                        pausar_tela()
+                                    else:
+                                        print("DINHEIRO INSUFICIENTE.")
+                                        pausar_tela()
+                                else:
+                                    print("VOCÊ JÁ POSSUI ESTE ITEM.")
+                                    pausar_tela()
+                            else:
                                 custo = SHOP_ITEMS[shop_option][list(SHOP_ITEMS[shop_option])[option - 1]][0]
-                                if PLAYER_STATS["money"] >= custo:
-                                    PLAYER_STATS["money"] -= custo
-                                    PLAYER_INVENTORY[shop_option].append(item)
-                                    print(f"{item} ADQUIRIDO!")
+                                qtd = 1
+                                if PLAYER_STATS["money"] >= custo * qtd:
+                                    PLAYER_STATS["money"] -= custo * qtd
+                                    if item not in PLAYER_INVENTORY[shop_option]:
+                                        PLAYER_INVENTORY[shop_option][item] = 0
+                                    PLAYER_INVENTORY[shop_option][item] += 1
+                                    print(f"{qtd}x {item} ADQUIRIDO!")
                                     pausar_tela()
                                 else:
                                     print("DINHEIRO INSUFICIENTE.")
                                     pausar_tela()
-                            else:
-                                print("VOCÊ JÁ POSSUI ESTE ITEM.")
-                                pausar_tela()
                     except ValueError:
                         option = -1
         except ValueError:
@@ -521,6 +545,7 @@ while(True):
     option = -1
     refresh_player_stats()
     limpar_tela()
+    pesca_efeitos()
     print(f"PY FISH GAME v.{version}\n")
     player_status_menu()
     print("\n[1] PESCAR      [2] INVENTÁRIO")
