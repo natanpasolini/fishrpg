@@ -12,12 +12,13 @@ PLAYER_STATS = {
     "luck": 0,
     "max_luck": 10,
     "money": 0,
-    "level": 1,
+    "level": 0,
     "max_level": 30,
-    "xp": 0,
+    "xp": 50000,
     "xplvlup": 2,
     "sp": 0,
-    "potion_level": 1
+    "potion_level": 1,
+    "max_plevel": 5
 }
 
 PLAYER_INVENTORY = {
@@ -199,7 +200,7 @@ def calcular_raridades():
     luck_bonus = PLAYER_STATS["luck"] * 3
     if POTIONS_IN_USE["POÇÃO DA SORTE"][1] >= 1:
         POTIONS_IN_USE["POÇÃO DA SORTE"][1] -= 1
-        luck_bonus += PLAYER_STATS["potion_level"]
+        luck_bonus += PLAYER_STATS["potion_level"] * 3
     BONUS_TOTAL = rod_bonus + luck_bonus
     CHANCES = BASE_CHANCES.copy()
     CHANCES["Comum"] = max(7, BASE_CHANCES["Comum"] - BONUS_TOTAL)
@@ -353,41 +354,61 @@ def skill_menu_barras():
             barraStr = ("▮" * blocos_preenchidos) + ("▯" * blocos_vazios)
     else:
         barraStr = "▯" * PLAYER_STATS["max_str"]
-    return barraLuck, barraStr
+    if PLAYER_STATS["potion_level"] > 0:
+            dif = (PLAYER_STATS["potion_level"] * 100) / PLAYER_STATS["max_plevel"]
+            if dif > 100:
+                dif = 100
+            blocos_preenchidos = int(PLAYER_STATS["max_plevel"] * (dif / 100))
+            if blocos_preenchidos <= 0:
+                blocos_preenchidos = 1
+            blocos_vazios = PLAYER_STATS["max_plevel"] - blocos_preenchidos
+            barraPotion = ("▮" * blocos_preenchidos) + ("▯" * blocos_vazios)
+    else:
+        barraPotion = "▯" * PLAYER_STATS["max_plevel"]
+    return barraLuck, barraStr, barraPotion
 
 def skill_menu():
     while(True):
         option = -1
-        MELHORIAS = ["FORÇA", "SORTE"]
-        MELHORIAS_STATS = ["str", "luck"]
-        MELHORIAS_STATS_MAX = ["max_str", "max_luck"]
+        MELHORIAS = ["FORÇA", "SORTE", "POÇÃO"]
+        MELHORIAS_STATS = ["str", "luck", "potion_level"]
+        MELHORIAS_STATS_MAX = ["max_str", "max_luck", "max_plevel"]
         limpar_tela()
-        barraLuck, barraStr = skill_menu_barras()
+        barraLuck, barraStr, barraPotion = skill_menu_barras()
         print("MELHORIAS")
         print(f"PONTOS DISPONIVEIS: {PLAYER_STATS['sp']}\n")
-        print(f"[1] FORÇA: {barraStr}")
         if PLAYER_STATS["str"] < PLAYER_STATS["max_str"]:
-            print(f"Custo: {1+PLAYER_STATS['str']}")
+            print(f"[1] FORÇA: {barraStr} [{1+PLAYER_STATS['str']}]")
+        else:
+            print(f"[1] FORÇA: {barraStr}")
         print("Diminui o tempo de pesca.")
-        print(f"[2] SORTE: {barraLuck}")
         if PLAYER_STATS["luck"] < PLAYER_STATS["max_luck"]:
-            print(f"Custo: 1")
+            print(f"[2] SORTE: {barraLuck} [1]")
+        else:
+            print(f"[2] SORTE: {barraLuck}")
         print("Aumenta a presença de peixes de alta raridade.")
+        if PLAYER_STATS["potion_level"] < PLAYER_STATS["max_plevel"]:
+            print(f"[3] POÇÕES: {barraPotion} [{2+PLAYER_STATS['potion_level']}]")
+        else:
+            print(f"[3] POÇÕES: {barraPotion}")
+        print("Aumenta o nível das poções.")
         print("[0] PARA VOLTAR")
         try:
             option = int(input("\nESCOLHA: "))
             if (option == 0):
                 break
             elif (option < len(MELHORIAS) + 1):
-                if (MELHORIAS_STATS[option - 1] != "luck"):
+                if (MELHORIAS_STATS[option - 1] == "str"):
                     custo = 1 + PLAYER_STATS[MELHORIAS_STATS[option - 1]]
+                elif (MELHORIAS_STATS[option - 1] == "potion_level"):
+                    custo = 2 + PLAYER_STATS[MELHORIAS_STATS[option - 1]]
                 else:
                     custo = 1
                 if (PLAYER_STATS[MELHORIAS_STATS[option - 1]] < PLAYER_STATS[MELHORIAS_STATS_MAX[option - 1]]):
                     if (PLAYER_STATS["sp"] > 0):
                         if PLAYER_STATS["sp"] >= custo:
                             PLAYER_STATS[MELHORIAS_STATS[option - 1]] += 1
-                            PLAYER_STATS["sp"] -= 1
+                            PLAYER_STATS["sp"] -= custo
                         else:
                             print(f"VOCÊ NÃO POSSUI {custo} PONTOS DE MELHORIA")
                             time.sleep(0.3)
