@@ -24,6 +24,10 @@ PLAYER_INVENTORY = {
     "POÇÕES": {}
 }
 
+POTIONS_IN_USE = {
+    "POÇÃO DA SORTE I": ["♧ I", 0]
+}
+
 RODS_STATS = {
     "GRAVETO": {"luck": 0,"str": 0},
     "VARA SIMPLES": {"luck": 0.5,"str": 0.5},
@@ -157,6 +161,10 @@ def player_status_menu():
         print(f"XP: {barraXP}  [{PLAYER_STATS['xp']}/{PLAYER_STATS['xplvlup']}]")
     else:
         print(f"XP: LVL MAX")
+    potions = POTIONS_IN_USE
+    for i in potions:
+        if potions[i][1] > 0:
+            print(f"[{potions[i][0]} x{potions[i][1]}]", end=" ", flush=True)
 
 def calcular_raridades():
     rod_bonus = RODS_STATS[list(RODS_STATS)[PLAYER_STATS["rod"]]]["luck"] * 1.7
@@ -239,16 +247,6 @@ def pesca_especiais(prarity):
             else:
                 item_pescado = False
     return item_pescado
-
-def pesca_efeitos():
-    potions = len(PLAYER_INVENTORY["POÇÕES"])
-    if potions > 0:
-        for i in PLAYER_INVENTORY["POÇÕES"]:
-            print(PLAYER_INVENTORY["POÇÕES"])
-            PLAYER_INVENTORY["POÇÕES"][i] -= 1
-            print(PLAYER_INVENTORY["POÇÕES"])
-            print(i)
-        
 
 def pesca():
     limpar_tela()
@@ -509,31 +507,47 @@ def inventory_menu():
             elif option == codex_number:
                 codex_menu()
             elif option <= len(PLAYER_INVENTORY):
-                limpar_tela()
                 inv_option = list(PLAYER_INVENTORY)[option - 1]
-                print(f"INVENTÁRIO > {inv_option}\n")
-                j = 0
-                for i in PLAYER_INVENTORY[inv_option]:
-                    j +=1
-                    print(f"[{j}] {i}\n{ITEMS_DESC[i]}")
-                print("[0] VOLTAR\n")
-                try:
-                    option = int(input("EQUIPAR: "))
-                    if option == 0:
-                        continue
-                    elif option <= len(PLAYER_INVENTORY[inv_option]):
-                        equipar = list(PLAYER_INVENTORY[inv_option])[option - 1]
-                        for i in range(len(RODS_STATS)):
-                            if list(RODS_STATS)[i] == equipar:
+                while True:
+                    limpar_tela()
+                    print(f"INVENTÁRIO > {inv_option}\n")
+                    j = 0
+                    for i in PLAYER_INVENTORY[inv_option]:
+                        j +=1
+                        if inv_option != "POÇÕES":
+                            print(f"[{j}] {i}\n{ITEMS_DESC[i]}")
+                        else:
+                            if PLAYER_INVENTORY[inv_option][i] > 0:
+                                print(f"[{j}] {PLAYER_INVENTORY[inv_option][i]}x {i}\n{ITEMS_DESC[i]}")
+                    print("[0] VOLTAR\n")
+                    try:
+                        if inv_option != "POÇÕES":
+                            option = int(input("EQUIPAR: "))
+                        else:
+                            option = int(input("USAR: "))
+                        if option == 0:
+                            break
+                        elif option <= len(PLAYER_INVENTORY[inv_option]):
+                            if inv_option != "POÇÕES":
+                                equipar = list(PLAYER_INVENTORY[inv_option])[option - 1]
+                                for i in range(len(RODS_STATS)):
+                                    if list(RODS_STATS)[i] == equipar:
+                                        break
+                                PLAYER_STATS["rod"] = i
+                                print(f"{equipar} EQUIPADO!")
                                 break
-                        PLAYER_STATS["rod"] = i
-                        print(f"{equipar} EQUIPADO!")
-                        pausar_tela()
-                    else:
-                        print("OPÇÃO INVÁLIDA")
-                        pausar_tela()
-                except ValueError:
-                    option = -1
+                            else:
+                                equipar = list(PLAYER_INVENTORY[inv_option])[option - 1]
+                                qtd = 1
+                                PLAYER_INVENTORY[inv_option][equipar] -= qtd
+                                POTIONS_IN_USE[equipar][1] += 1
+                                print(f"{qtd}x {equipar} USADA!")
+                            pausar_tela()
+                        else:
+                            print("OPÇÃO INVÁLIDA")
+                            pausar_tela()
+                    except ValueError:
+                        option = -1
             else:
                 print("OPÇÃO INVÁLIDA.")
                 pausar_tela()
@@ -545,7 +559,6 @@ while(True):
     option = -1
     refresh_player_stats()
     limpar_tela()
-    pesca_efeitos()
     print(f"PY FISH GAME v.{version}\n")
     player_status_menu()
     print("\n[1] PESCAR      [2] INVENTÁRIO")
@@ -565,6 +578,7 @@ while(True):
         elif (option == 4):
             skill_menu()
         elif (option == 999):
+            PLAYER_STATS["money"] += 500
             print("\nDEBUG RARIDADES")
             CHANCES = calcular_raridades()
             print("Secreto: {}\nLendário: {}\nÉpico: {}\nRaro: {}\nIncomum: {}\nComum: {}\n".format(CHANCES["Secreto"], CHANCES["Lendário"], CHANCES["Épico"], CHANCES["Raro"], CHANCES["Incomum"], CHANCES["Comum"]))
