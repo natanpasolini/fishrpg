@@ -16,7 +16,8 @@ PLAYER_STATS = {
     "max_level": 30,
     "xp": 0,
     "xplvlup": 2,
-    "sp": 0
+    "sp": 0,
+    "potion_level": 1
 }
 
 PLAYER_INVENTORY = {
@@ -25,7 +26,9 @@ PLAYER_INVENTORY = {
 }
 
 POTIONS_IN_USE = {
-    "POÇÃO DA SORTE I": ["♧ I", 0]
+    "POÇÃO DA SORTE": [f"♧ {PLAYER_STATS['potion_level']}", 0],
+    "POÇÃO DE FORÇA": [f"⛨ {PLAYER_STATS['potion_level']}", 0],
+    "POÇÃO DE TAMANHO": [f"⇪ {PLAYER_STATS['potion_level']}", 0]
 }
 
 RODS_STATS = {
@@ -46,7 +49,9 @@ ITEMS_DESC = {
     "VARA ÉPICA": f"+{RODS_STATS['VARA ÉPICA']['luck']} SORTE +{RODS_STATS['VARA ÉPICA']['str']} FORÇA",
     "VARA LENDÁRIA": f"+{RODS_STATS['VARA LENDÁRIA']['luck']} SORTE +{RODS_STATS['VARA LENDÁRIA']['str']} FORÇA",
     "VARA SECRETA": f"+{RODS_STATS['VARA SECRETA']['luck']} SORTE +{RODS_STATS['VARA SECRETA']['str']} FORÇA",
-    "POÇÃO DA SORTE I": f"+1 SORTE"
+    "POÇÃO DA SORTE": f"+{PLAYER_STATS['potion_level']} SORTE",
+    "POÇÃO DE FORÇA": f"+{PLAYER_STATS['potion_level']} FORÇA",
+    "POÇÃO DE TAMANHO": f"+{PLAYER_STATS['potion_level'] * 1.5} TAMANHO DE PEIXES"
 }
 
 BASE_CHANCES = {
@@ -101,7 +106,9 @@ SHOP_ITEMS = {
         "VARA RARA": [90,f"{ITEMS_DESC['VARA RARA']}"]
     },
     "POÇÕES": {
-        "POÇÃO DA SORTE I": [3,f"{ITEMS_DESC["POÇÃO DA SORTE I"]}"]
+        "POÇÃO DA SORTE": [70,f"{ITEMS_DESC["POÇÃO DA SORTE"]}"],
+        "POÇÃO DE FORÇA": [50,f"{ITEMS_DESC["POÇÃO DE FORÇA"]}"],
+        "POÇÃO DE TAMANHO": [200,f"{ITEMS_DESC["POÇÃO DE TAMANHO"]}"]
     }
 }
 
@@ -141,6 +148,18 @@ def refresh_player_stats():
         print(f"+{skill_points} SKILL POINTS")
         time.sleep(0.4)
         pausar_tela()
+    for key in POTIONS_IN_USE:
+        emoji = POTIONS_IN_USE[key][0].split()[0]
+        POTIONS_IN_USE[key][0] = f"{emoji} {PLAYER_STATS['potion_level']}"
+    for i in ITEMS_DESC:
+        if i.split()[0] == "POÇÃO":
+            if i.split()[2] == "TAMANHO":
+                modificador = 1.5
+            else:
+                modificador = 1
+            ITEMS_DESC[i] = ITEMS_DESC[i].replace(f"{ITEMS_DESC[i].split()[0]}", f"+{PLAYER_STATS['potion_level'] * modificador}")
+    for i in SHOP_ITEMS["POÇÕES"]:
+        SHOP_ITEMS["POÇÕES"][i][1] = f"{ITEMS_DESC[i]}"
 
 def player_status_menu():
     print(f"NÍVEL: {PLAYER_STATS['level']}   FISH COINS: {PLAYER_STATS['money']:.2f}")
@@ -162,9 +181,18 @@ def player_status_menu():
     else:
         print(f"XP: LVL MAX")
     potions = POTIONS_IN_USE
+    j = 0
+    pUse = 0
     for i in potions:
         if potions[i][1] > 0:
-            print(f"[{potions[i][0]} x{potions[i][1]}]", end=" ", flush=True)
+            pUse += 1
+    for i in potions:
+        if potions[i][1] > 0:
+            j += 1
+            if j != pUse:
+                print(f"[{potions[i][0]} x{potions[i][1]}]", end=" ", flush=True)
+            else:
+                print(f"[{potions[i][0]} x{potions[i][1]}]")
 
 def calcular_raridades():
     rod_bonus = RODS_STATS[list(RODS_STATS)[PLAYER_STATS["rod"]]]["luck"] * 1.7
@@ -406,7 +434,11 @@ def shop_menu():
                         elif shop_option != "POÇÕES":
                             custo = "COMPRADO"
                             fc = ""
-                        print(f"[{j}] {i} - {custo} {fc}\n{SHOP_ITEMS[shop_option][i][1]}")
+                        if shop_option == "POÇÕES":
+                            nome = i + f" {PLAYER_STATS['potion_level']}"
+                        else:
+                            nome = i
+                        print(f"[{j}] {nome} - {custo} {fc}\n{SHOP_ITEMS[shop_option][i][1]}")
                     print("[0] VOLTAR\n")
                     try:
                         option = int(input("ESCOLHA: "))
@@ -433,6 +465,7 @@ def shop_menu():
                                 qtd = 1
                                 if PLAYER_STATS["money"] >= custo * qtd:
                                     PLAYER_STATS["money"] -= custo * qtd
+                                    item = item.replace(f" {PLAYER_STATS['potion_level']}", "")
                                     if item not in PLAYER_INVENTORY[shop_option]:
                                         PLAYER_INVENTORY[shop_option][item] = 0
                                     PLAYER_INVENTORY[shop_option][item] += 1
@@ -518,7 +551,7 @@ def inventory_menu():
                             print(f"[{j}] {i}\n{ITEMS_DESC[i]}")
                         else:
                             if PLAYER_INVENTORY[inv_option][i] > 0:
-                                print(f"[{j}] {PLAYER_INVENTORY[inv_option][i]}x {i}\n{ITEMS_DESC[i]}")
+                                print(f"[{j}] {PLAYER_INVENTORY[inv_option][i]}x {i} {PLAYER_STATS['potion_level']}\n{ITEMS_DESC[i.replace(f" {PLAYER_STATS['potion_level']}", "")]}")
                     print("[0] VOLTAR\n")
                     try:
                         if inv_option != "POÇÕES":
@@ -538,6 +571,7 @@ def inventory_menu():
                                 break
                             else:
                                 equipar = list(PLAYER_INVENTORY[inv_option])[option - 1]
+                                equipar = equipar.replace(f" {PLAYER_STATS['potion_level']}", "")
                                 qtd = 1
                                 PLAYER_INVENTORY[inv_option][equipar] -= qtd
                                 POTIONS_IN_USE[equipar][1] += 1
@@ -577,6 +611,10 @@ while(True):
             shop_menu()
         elif (option == 4):
             skill_menu()
+        elif (option == 444):
+            PLAYER_STATS["potion_level"] += 1
+            print(PLAYER_STATS["potion_level"])
+            pausar_tela()
         elif (option == 999):
             PLAYER_STATS["money"] += 500
             print("\nDEBUG RARIDADES")
