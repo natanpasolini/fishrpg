@@ -2,8 +2,9 @@ import time
 import os
 import random
 import math
+import json
 
-version = "B02"
+version = "B03"
 
 PLAYER_STATS = {
     "rod": 0,
@@ -112,6 +113,7 @@ SHOP_ITEMS = {
         "POÇÃO DE TAMANHO": [200,f"{ITEMS_DESC["POÇÃO DE TAMANHO"]}"]
     }
 }
+
 
 def pausar_tela():
     input("Pressione qualquer tecla para continuar...")
@@ -620,6 +622,43 @@ def inventory_menu():
         except ValueError:
             option = -1
 
+def salvar_jogo():
+    pasta_save = "saves"
+    caminho_arquivo = os.path.join(pasta_save, "save.json")
+    os.makedirs(pasta_save, exist_ok=True)
+    dados_para_salvar = {
+        "PLAYER_STATS": PLAYER_STATS,
+        "PLAYER_INVENTORY": PLAYER_INVENTORY,
+        "PLAYER_FISHES": PLAYER_FISHES,
+        "POTIONS_IN_USE": POTIONS_IN_USE
+    }
+    try:
+        with open(caminho_arquivo, "w") as arquivo_save:
+            json.dump(dados_para_salvar, arquivo_save, indent=4)
+        print("JOGO SALVO COM SUCESSO!")
+    except Exception as e:
+        print(f"Ocorreu um erro ao salvar o jogo: {e}")
+    pausar_tela()
+
+def carregar_jogo():
+    global PLAYER_STATS, PLAYER_INVENTORY, PLAYER_FISHES, POTIONS_IN_USE
+    caminho_arquivo = os.path.join("saves", "save.json")
+    try:
+        with open(caminho_arquivo, "r") as arquivo_save:
+            dados_carregados = json.load(arquivo_save)
+            PLAYER_STATS.update(dados_carregados["PLAYER_STATS"])
+            PLAYER_INVENTORY.update(dados_carregados["PLAYER_INVENTORY"])
+            PLAYER_FISHES.update(dados_carregados["PLAYER_FISHES"])
+            POTIONS_IN_USE.update(dados_carregados["POTIONS_IN_USE"])
+            print("SAVE CARREGADO COM SUCESSO!")
+            time.sleep(1.5)
+    except FileNotFoundError:
+        print("Nenhum save encontrado.")
+        time.sleep(1.5)
+    except Exception as e:
+        print(f"Ocorreu um erro ao carregar o jogo: {e}")
+        time.sleep(1.5)
+
 startup()
 while(True):
     option = -1
@@ -629,6 +668,7 @@ while(True):
     player_status_menu()
     print("\n[1] PESCAR      [2] INVENTÁRIO")
     print("[3] LOJA        [4] MELHORIAS")
+    print("[5] SALVAR      [6] CARREGAR")
     print("[0] SAIR")
     try:
         option = int(input("\nESCOLHA: "))
@@ -643,5 +683,9 @@ while(True):
             shop_menu()
         elif (option == 4):
             skill_menu()
+        elif (option == 5):
+            salvar_jogo()
+        elif (option == 6):
+            carregar_jogo()
     except ValueError:
         option = -1
