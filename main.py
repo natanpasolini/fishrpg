@@ -3,7 +3,7 @@ import os
 import random
 import math
 
-version = "B01"
+version = "B02"
 
 PLAYER_STATS = {
     "rod": 0,
@@ -13,8 +13,8 @@ PLAYER_STATS = {
     "max_luck": 10,
     "money": 0,
     "level": 0,
-    "max_level": 30,
-    "xp": 50000,
+    "max_level": 40,
+    "xp": 0,
     "xplvlup": 2,
     "sp": 0,
     "potion_level": 1,
@@ -643,15 +643,5 @@ while(True):
             shop_menu()
         elif (option == 4):
             skill_menu()
-        elif (option == 444):
-            PLAYER_STATS["potion_level"] += 1
-            print(PLAYER_STATS["potion_level"])
-            pausar_tela()
-        elif (option == 999):
-            PLAYER_STATS["money"] += 500
-            print("\nDEBUG RARIDADES")
-            CHANCES = calcular_raridades()
-            print("Secreto: {}\nLendário: {}\nÉpico: {}\nRaro: {}\nIncomum: {}\nComum: {}\n".format(CHANCES["Secreto"], CHANCES["Lendário"], CHANCES["Épico"], CHANCES["Raro"], CHANCES["Incomum"], CHANCES["Comum"]))
-            pausar_tela()
     except ValueError:
         option = -1
